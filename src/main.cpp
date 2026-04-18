@@ -6,7 +6,7 @@
 
 void test_pitch_bend() {
     std::cout << "\n--- Iniciando Teste de Conversao (Centro Perfeito) ---\n";
-    uint16_t val_midi1 = 0;
+    uint16_t val_midi1 = 8192;
     uint32_t p32 = midi1_to_midi2_pitch(val_midi1);
     UMPMessage ump = create_midi2_pitch_bend(p32);
     
@@ -44,6 +44,8 @@ RtMidiIn* select_midi_input() {
 }
 
 int main(int argc, char *argv[]) {
+    QApplication app(argc, argv);
+
     RtMidiIn* port = select_midi_input();
     if (!port) {
         std::cout << "Nenhum dispositivo selecionado. Saindo...\n";
@@ -53,10 +55,13 @@ int main(int argc, char *argv[]) {
     std::cout << "Rodar teste de unidade? (s/n)\n";
     char choice;
     std::cin >> choice;
-    if (choice == 's') test_pitch_bend();
+    if (choice == 's') {
+        test_pitch_bend();
+    }
 
-    QApplication app(argc, argv);
-    MainWindow win(port);
-    win.show();
+    MainWindow window(port);
+    
+    window.show();
+
     return app.exec();
 }

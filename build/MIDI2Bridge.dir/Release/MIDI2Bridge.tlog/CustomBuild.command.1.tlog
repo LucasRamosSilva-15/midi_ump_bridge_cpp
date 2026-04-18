@@ -1,0 +1,10 @@
+^C:\USERS\LUCASRAMOSSILVA\DOCUMENTS\MIDI_UMP_BRIDGE_C++\CMAKELISTS.TXT
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/LucasRamosSilva/Documents/midi_ump_bridge_c++ -BC:/Users/LucasRamosSilva/Documents/midi_ump_bridge_c++/build --check-stamp-file C:/Users/LucasRamosSilva/Documents/midi_ump_bridge_c++/build/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

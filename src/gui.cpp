@@ -109,7 +109,7 @@ MainWindow::~MainWindow() {
 }
 
 void MainWindow::simular_pitch_bend() {
-    uint16_t val_midi1 = 0;
+    uint16_t val_midi1 = 8192; // <- Mude de 0 para 8192 (O novo centro!)
     uint32_t p32 = midi1_to_midi2_pitch(val_midi1);
     UMPMessage ump_msg = create_midi2_pitch_bend(p32, 0);
 
