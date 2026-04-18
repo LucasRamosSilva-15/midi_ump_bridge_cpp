@@ -31,7 +31,3 @@ target_link_libraries(MIDI2Bridge PRIVATE
     Qt6::Core
     rtmidi
 )
-
-if(WIN32 AND NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set_target_properties(MIDI2Bridge PROPERTIES WIN32_EXECUTABLE ON)
-endif()
