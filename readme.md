@@ -8,7 +8,7 @@ Projeto em python: https://github.com/LucasRamosSilva-15/midi-ump-bridge
 
 ## 🌟 Assista à demonstração do sistema em tempo real: [Link para o Vídeo no Drive]
 
-[text](https://drive.google.com/file/d/1uy8M-NuNLCTuwC7DK9pBds0iCnk3s3lD/view?usp=sharing)
+https://drive.google.com/file/d/1uy8M-NuNLCTuwC7DK9pBds0iCnk3s3lD/view?usp=sharing
 
 ---
 
