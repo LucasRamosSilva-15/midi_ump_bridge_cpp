@@ -205,7 +205,7 @@ C:/Users/LucasRamosSilva/Documents/midi_ump_bridge_c++/src/gui.h
  mdp:C:/Users/LucasRamosSilva/Documents/midi_ump_bridge_c++/src/gui.h
  mdp:C:/Users/LucasRamosSilva/Documents/midi_ump_bridge_c++/src/ump.h
  mdp:C:/Users/LucasRamosSilva/Documents/rtmidi_lib/include/rtmidi/RtMidi.h
-C:/Users/LucasRamosSilva/Documents/midi_ump_bridge_c++/src/main.cpp
-C:/Users/LucasRamosSilva/Documents/midi_ump_bridge_c++/src/gui.cpp
 C:/Users/LucasRamosSilva/Documents/midi_ump_bridge_c++/src/ump.h
+C:/Users/LucasRamosSilva/Documents/midi_ump_bridge_c++/src/gui.cpp
+C:/Users/LucasRamosSilva/Documents/midi_ump_bridge_c++/src/main.cpp
 C:/Users/LucasRamosSilva/Documents/midi_ump_bridge_c++/src/converter.cpp
