@@ -1,4 +1,4 @@
-## 🎹 Conversor e Analisador MIDI 1.0 para MIDI 2.0 (UMP) - Versão C++
+## Conversor e Analisador MIDI 1.0 para MIDI 2.0 (UMP) - Versão C++
 Bem-vindo à versão de alta performance do meu Trabalho de Conclusão de Curso (TCC) desenvolvido no Instituto Federal da Paraíba (IFPB).
 
 Originalmente concebido em Python, este projeto foi portado para C++17 utilizando o framework Qt6 para garantir menor latência no processamento de pacotes UMP (Universal MIDI Packet) e uma interface gráfica mais robusta.
@@ -6,27 +6,27 @@ Originalmente concebido em Python, este projeto foi portado para C++17 utilizand
 Projeto em python: https://github.com/LucasRamosSilva-15/midi-ump-bridge
 ---
 
-## 🌟 Assista à demonstração do sistema em tempo real: [Link para o Vídeo no Drive]
+## Assista à demonstração do sistema em tempo real: [Link para o Vídeo no Drive]
 
 https://drive.google.com/file/d/1uy8M-NuNLCTuwC7DK9pBds0iCnk3s3lD/view?usp=sharing
 
 ---
 
-## 📋 Sumário
+## Sumário
 
-- [🎵 O que é MIDI?](#-o-que-é-midi)
-- [🎯 Sobre o Projeto](#-sobre-o-projeto)
-- [🚀 Tecnologias Utilizadas](#-tecnologias-utilizadas)
-- [📸 Demonstração Visual](#-demonstracao-visual)
-- [🛠️ Estrutura do Código (C++)](#-estrutura-do-codigo-c)
-- [💻 Guia de Compilação e Execução (Windows)]  (#-guia-de-compilacao-e-execucao-windows)
-- [🧪 Validação de Dados](#-validacao-de-dados)
-- [🎹 Hardware de Teste](#-hardware-de-teste)
-- [🎓 Autor](#-autor)
+- [O que é MIDI?](#-o-que-é-midi)
+- [Sobre o Projeto](#-sobre-o-projeto)
+- [Tecnologias Utilizadas](#-tecnologias-utilizadas)
+- [Demonstração Visual](#-demonstracao-visual)
+- [Estrutura do Código (C++)](#-estrutura-do-codigo-c)
+- [Guia de Compilação e Execução (Windows)]  (#-guia-de-compilacao-e-execucao-windows)
+- [Validação de Dados](#-validacao-de-dados)
+- [Hardware de Teste](#-hardware-de-teste)
+- [Autor](#-autor)
 
 ---
 
-## 🎵 O que é MIDI?
+## O que é MIDI?
 
 Se você não é da área de tecnologia musical, pode estar se perguntando o que exatamente esse sistema faz e por que ele precisa ser convertido. A regra de ouro para entender o MIDI (*Musical Instrument Digital Interface*) é: **MIDI não é áudio, é partitura digital.**
 
@@ -41,12 +41,12 @@ O computador (ou sintetizador) lê essas instruções e "toca" os instrumentos v
 
 ---
 
-## 🎯 Sobre o Projeto
+## Sobre o Projeto
 Esta PoC (Prova de Conceito) foca na ponte tecnológica entre o protocolo MIDI 1.0 (8-bit/14-bit) e o novo MIDI 2.0 (32-bit/64-bit). O software captura bytes brutos de dispositivos MIDI reais, realiza o upscale da resolução matemática e encapsula o resultado no formato de pacotes de 64 bits (UMP Message Type 4).
 
 ---
 
-## 🚀 Tecnologias Utilizadas
+## Tecnologias Utilizadas
 Linguagem: C++17
 
 Framework GUI: Qt 6.11.0 (MSVC 2022)
@@ -59,7 +59,7 @@ Padrão: MIDI 2.0 / Universal MIDI Packet (UMP)
 
 ---
 
-## 📸 Demonstração Visual
+## Demonstração Visual
 Abaixo, a interface desenvolvida em Qt6 que monitora a entrada de notas e o gráfico de Pitch Bend em alta resolução.
 
 ![alt text](capturas/Captura1.png)
@@ -68,7 +68,7 @@ Abaixo, a interface desenvolvida em Qt6 que monitora a entrada de notas e o grá
 
 ---
 
-## 🛠️ Estrutura do Código (C++)
+## Estrutura do Código (C++)
 Diferente da versão Python, a arquitetura C++ separa as responsabilidades em classes e headers:
 
 src/ump.h: Estrutura de dados para mensagens de 64 bits e lógica de análise de bits.
@@ -81,7 +81,7 @@ src/main.cpp: Ponto de entrada que gerencia o console de seleção de portas e a
 
 ---
 
-## 💻 Guia de Compilação e Execução (Windows)
+## Guia de Compilação e Execução (Windows)
 Para rodar este projeto, você precisará do Visual Studio 2022 (com C++), CMake e o Qt6 instalados.
 
 1. Pré-requisitos
@@ -115,7 +115,7 @@ Ao abrir, o terminal solicitará a escolha da porta MIDI. Após a seleção, a i
 
 ---
 
-## 🧪 Validação de Dados
+## Validação de Dados
 O software inclui uma rotina de teste de unidade integrada. Ao iniciar, você pode optar por rodar o Teste de Pitch Bend.
 
 O que o teste valida?
@@ -123,7 +123,7 @@ O padrão UMP exige que o centro do Pitch Bend (repouso) seja representado pelo 
 
 ---
 
-## 🎹 Hardware de Teste
+## Hardware de Teste
 Para garantir a precisão, o sistema foi homologado com:
 
 Teclado Físico: Yamaha PSR E383 (USB-MIDI).
@@ -132,6 +132,6 @@ Virtualização: loopMIDI + VMPK (Virtual MIDI Piano Keyboard).
 
 ---
 
-## 🎓 Autor
+## Autor
 Desenvolvido por Lucas Ramos Silva como parte do TCC do curso tecnico em informatica no IFPB CG.
 Professor_Orientador: Estou procurando
