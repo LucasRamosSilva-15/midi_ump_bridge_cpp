@@ -1,4 +1,4 @@
-## Conversor e Analisador MIDI 1.0 para MIDI 2.0 (UMP) - Versão C++
+## 🎹 Conversor e Analisador MIDI 1.0 para MIDI 2.0 (UMP) - Versão C++
 Bem-vindo à versão de alta performance do meu Trabalho de Conclusão de Curso (TCC) desenvolvido no Instituto Federal da Paraíba (IFPB).
 
 Originalmente concebido em Python, este projeto foi portado para C++17 utilizando o framework Qt6 para garantir menor latência no processamento de pacotes UMP (Universal MIDI Packet) e uma interface gráfica mais robusta.
