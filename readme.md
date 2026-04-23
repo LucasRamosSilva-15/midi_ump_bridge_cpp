@@ -32,9 +32,9 @@ Se você não é da área de tecnologia musical, pode estar se perguntando o que
 
 Diferente de um arquivo MP3 ou WAV, que gravam a "onda sonora" real de uma música, o protocolo MIDI transmite apenas **instruções matemáticas**. Quando um músico aperta uma tecla em um teclado físico, em vez de enviar o som pronto para o computador, o teclado envia dados como:
 
-* **Qual nota foi tocada?** (Ex: Dó)
-* **Com que força a tecla foi pressionada?** (Velocidade)
-* **Quando ela foi solta?** * **O músico usou alguma alavanca de efeito?** (*Pitch Bend*)
+* **Qual nota foi tocada?** (que é indicado pela numeração da nota do teclado, como por exemplo, 51)
+* **Com que força a tecla foi pressionada?** (Velocity, que é a intensidade que aquela nota foi tocada)
+* **Quando ela foi solta?** * **O músico usou alguma alavanca de efeito?** (Pitch Bend, que é usado para alterar a afinação (pitch) de uma nota de forma contínua e temporária)
 
 O computador (ou sintetizador) lê essas instruções e "toca" os instrumentos virtuais na hora.
 
