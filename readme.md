@@ -93,21 +93,29 @@ RtMidi: A biblioteca deve estar na pasta configurada no seu CMakeLists.txt.
 No arquivo CMakeLists.txt, verifique se os caminhos coincidem com a sua instalação:
 
 CMake
+
 set(CMAKE_PREFIX_PATH "C:/Qt/6.x.x/msvc2022_64") # Seu caminho do Qt
+
 set(RTMIDI_DIR "C:/caminho/para/rtmidi_lib")     # Seu caminho da RtMidi
+
 3. Compilando via Terminal
 Abra o terminal na pasta raiz do projeto e execute:
 
 Bash
 # Criar pasta de build
-,,, mkdir build
+```bash
+mkdir build
 cd build
-,,,
+```
 # Gerar arquivos do projeto
+```bash
 cmake ..
+```
 
 # Compilar o executável
+```bash
 cmake --build . --config Release
+```
 4. Rodando
 O executável será gerado em build/Release/MIDI2Bridge.exe.
 
