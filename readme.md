@@ -100,9 +100,9 @@ Abra o terminal na pasta raiz do projeto e execute:
 
 Bash
 # Criar pasta de build
-mkdir build
+,,, mkdir build
 cd build
-
+,,,
 # Gerar arquivos do projeto
 cmake ..
 
