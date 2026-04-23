@@ -19,7 +19,7 @@ https://drive.google.com/file/d/1uy8M-NuNLCTuwC7DK9pBds0iCnk3s3lD/view?usp=shari
 - [Tecnologias Utilizadas](#-tecnologias-utilizadas)
 - [Demonstração Visual](#-demonstracao-visual)
 - [Estrutura do Código (C++)](#-estrutura-do-codigo-c)
-- [Guia de Compilação e Execução (Windows)]  (#-guia-de-compilacao-e-execucao-windows)
+- [Guia de Compilação e Execução (Windows)](#-guia-de-compilacao-e-execucao-windows)
 - [Validação de Dados](#-validacao-de-dados)
 - [Hardware de Teste](#-hardware-de-teste)
 - [Autor](#-autor)
@@ -91,28 +91,28 @@ RtMidi: A biblioteca deve estar na pasta configurada no seu CMakeLists.txt.
 
 2. Configuração do CMake
 No arquivo CMakeLists.txt, verifique se os caminhos coincidem com a sua instalação:
-
+```bash
 CMake
 
 set(CMAKE_PREFIX_PATH "C:/Qt/6.x.x/msvc2022_64") # Seu caminho do Qt
 
 set(RTMIDI_DIR "C:/caminho/para/rtmidi_lib")     # Seu caminho da RtMidi
-
+```
 3. Compilando via Terminal
 Abra o terminal na pasta raiz do projeto e execute:
 
 Bash
-# Criar pasta de build
+### Criar pasta de build
 ```bash
 mkdir build
 cd build
 ```
-# Gerar arquivos do projeto
+### Gerar arquivos do projeto
 ```bash
 cmake ..
 ```
 
-# Compilar o executável
+### Compilar o executável
 ```bash
 cmake --build . --config Release
 ```
