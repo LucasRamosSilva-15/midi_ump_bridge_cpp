@@ -20,6 +20,7 @@ https://drive.google.com/file/d/1uy8M-NuNLCTuwC7DK9pBds0iCnk3s3lD/view?usp=shari
 - [Demonstração Visual](#-demonstracao-visual)
 - [Estrutura do Código (C++)](#-estrutura-do-codigo-c)
 - [Guia de Compilação e Execução (Windows)](#-guia-de-compilacao-e-execucao-windows)
+- [Guia de Compilação e Execução (Linux)](#-guia-de-compilacao-e-execucao-linux)
 - [Validação de Dados](#-validacao-de-dados)
 - [Hardware de Teste](#-hardware-de-teste)
 - [Autor](#-autor)
@@ -85,23 +86,12 @@ src/main.cpp: Ponto de entrada que gerencia o console de seleção de portas e a
 Para rodar este projeto, você precisará do Visual Studio 2022 (com C++), CMake e o Qt6 instalados.
 
 1. Pré-requisitos
-Qt6: Baixe via Qt Online Installer (Marque a opção MSVC 2022 64-bit).
+- **Qt6:** Baixe via Qt Online Installer (Marque a opção MSVC 2022 64-bit).
+- **RtMidi:** A biblioteca é baixada e compilada automaticamente pelo CMake (FetchContent).
 
-RtMidi: A biblioteca deve estar na pasta configurada no seu CMakeLists.txt.
-
-2. Configuração do CMake
-No arquivo CMakeLists.txt, verifique se os caminhos coincidem com a sua instalação:
-```bash
-CMake
-
-set(CMAKE_PREFIX_PATH "C:/Qt/6.x.x/msvc2022_64") # Seu caminho do Qt
-
-set(RTMIDI_DIR "C:/caminho/para/rtmidi_lib")     # Seu caminho da RtMidi
-```
-3. Compilando via Terminal
+2. Compilando via Terminal
 Abra o terminal na pasta raiz do projeto e execute:
 
-Bash
 ### Criar pasta de build
 ```bash
 mkdir build
@@ -122,7 +112,31 @@ O executável será gerado em build/Release/MIDI2Bridge.exe.
 Ao abrir, o terminal solicitará a escolha da porta MIDI. Após a seleção, a interface gráfica será carregada automaticamente.
 
 ---
+## Guia de Compilação e Execução (Linux)
+O processo no Linux (distribuições baseadas em Debian/Ubuntu) é nativo e simplificado, pois as bibliotecas são instaladas e resolvidas diretamente pelo sistema.
 
+1. Instalando Dependências
+Abra o terminal e instale os pacotes de compilação, o framework Qt6 e a biblioteca ALSA (necessária para o RtMidi gerenciar dispositivos de áudio):
+```bash
+sudo apt update
+sudo apt install build-essential cmake qt6-base-dev libasound2-dev
+```
+
+2. Compilando o Projeto
+Na pasta raiz do projeto, execute:
+```bash
+mkdir build
+cd build
+cmake ..
+cmake --build .
+```
+
+3. Executando
+```bash
+./MIDI2Bridge
+```
+
+---
 ## Validação de Dados
 O software inclui uma rotina de teste de unidade integrada. Ao iniciar, você pode optar por rodar o Teste de Pitch Bend.
 
@@ -142,4 +156,4 @@ Virtualização: loopMIDI + VMPK (Virtual MIDI Piano Keyboard).
 
 ## Autor
 Desenvolvido por Lucas Ramos Silva como parte do TCC do curso tecnico em informatica no IFPB CG.
-Professor_Orientador: Estou procurando
+Professor_Orientador: Carlos Henrique Alencar

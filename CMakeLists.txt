@@ -8,12 +8,19 @@ set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
-# Caminho do Qt
-set(CMAKE_PREFIX_PATH "C:/Qt/6.11.0/msvc2022_64")
 find_package(Qt6 REQUIRED COMPONENTS Widgets Core)
 
-# Caminho da RtMidi (Raiz)
-set(RTMIDI_DIR "C:/Users/LucasRamosSilva/Documents/rtmidi_lib")
+include(FetchContent)
+message(STATUS "Baixando dependencia e compilando: RtMidi...")
+FetchContent_Declare(
+    rtmidi
+    GIT_REPOSITORY https://github.com/thestk/rtmidi.git
+    GIT_TAG 6.0.0
+)
+set(RTMIDI_BUILD_TESTING OFF CACHE BOOL "Desativar testes" FORCE)
+set(RTMIDI_BUILD_STATIC ON CACHE BOOL "Build estatico" FORCE)
+set(RTMIDI_BUILD_SHARED OFF CACHE BOOL "Build compartilhado" FORCE)
+FetchContent_MakeAvailable(rtmidi)
 
 set(SOURCES
     src/main.cpp
@@ -26,14 +33,7 @@ set(SOURCES
 
 add_executable(MIDI2Bridge ${SOURCES})
 
-target_include_directories(MIDI2Bridge PRIVATE 
-    "src"
-    "${RTMIDI_DIR}/include/rtmidi"
-)
-
-target_link_directories(MIDI2Bridge PRIVATE 
-    "${RTMIDI_DIR}/lib"
-)
+target_include_directories(MIDI2Bridge PRIVATE "src")
 
 target_link_libraries(MIDI2Bridge PRIVATE 
     Qt6::Widgets 
