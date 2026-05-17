@@ -106,7 +106,7 @@ cmake ..
 ```bash
 cmake --build . --config Release
 ```
-4. Rodando
+### Rodando
 O executável será gerado em build/Release/MIDI2Bridge.exe.
 
 Ao abrir, o terminal solicitará a escolha da porta MIDI. Após a seleção, a interface gráfica será carregada automaticamente.

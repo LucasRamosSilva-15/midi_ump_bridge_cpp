@@ -18,8 +18,8 @@ FetchContent_Declare(
     GIT_TAG 6.0.0
 )
 set(RTMIDI_BUILD_TESTING OFF CACHE BOOL "Desativar testes" FORCE)
-set(RTMIDI_BUILD_STATIC ON CACHE BOOL "Build estatico" FORCE)
-set(RTMIDI_BUILD_SHARED OFF CACHE BOOL "Build compartilhado" FORCE)
+set(RTMIDI_BUILD_STATIC_LIBS ON CACHE BOOL "Build estatico" FORCE)
+set(RTMIDI_BUILD_SHARED_LIBS OFF CACHE BOOL "Build compartilhado" FORCE)
 FetchContent_MakeAvailable(rtmidi)
 
 set(SOURCES
