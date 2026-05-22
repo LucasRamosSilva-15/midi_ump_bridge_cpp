@@ -15,6 +15,7 @@ Projeto em Python: https://github.com/LucasRamosSilva-15/midi-ump-bridge
 
 ## Sumário
 
+- [Funcionalidades](#-funcionalidades)
 - [O que é MIDI?](#-o-que-é-midi)
 - [Sobre o Projeto](#-sobre-o-projeto)
 - [Tecnologias Utilizadas](#-tecnologias-utilizadas)

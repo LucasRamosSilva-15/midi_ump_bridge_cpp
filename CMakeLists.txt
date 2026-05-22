@@ -41,6 +41,18 @@ target_link_libraries(MIDI2Bridge PRIVATE
     rtmidi
 )
 
-# if(WIN32 AND NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
-#    set_target_properties(MIDI2Bridge PROPERTIES WIN32_EXECUTABLE ON)
-# endif()
+enable_testing()
+
+add_executable(converter_tests
+    tests/converter_tests.cpp
+    src/converter.cpp
+    src/converter.h
+)
+
+target_include_directories(converter_tests PRIVATE "src")
+
+add_test(NAME converter_tests COMMAND converter_tests)
+
+if(WIN32)
+    set_target_properties(MIDI2Bridge PROPERTIES WIN32_EXECUTABLE ON)
+endif()

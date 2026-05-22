@@ -6,9 +6,11 @@
 #include <QProgressBar>
 #include <QPushButton>
 #include <QLabel>
+#include <QComboBox>
 #include <QThread>
 #include <QVariantMap>
 #include <RtMidi.h>
+#include <memory>
 #include "ump.h"
 
 class MidiWorker : public QThread {
@@ -30,18 +32,31 @@ private:
 class MainWindow : public QMainWindow {
     Q_OBJECT
 public:
-    explicit MainWindow(RtMidiIn* port, QWidget *parent = nullptr);
+    explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
 private slots:
+    void refresh_ports();
+    void connect_selected_port();
+    void disconnect_port();
     void simular_pitch_bend();
     void add_table_row(const QVariantMap& data);
 
 private:
+    void start_worker();
+    void stop_worker();
+    void set_status(const QString& text);
+
+    QComboBox* port_selector;
+    QPushButton* btn_refresh;
+    QPushButton* btn_connect;
+    QPushButton* btn_disconnect;
+    QLabel* status_label;
     QTableWidget* table;
     QProgressBar* bar;
     QPushButton* btn_simular;
     MidiWorker* worker;
+    std::unique_ptr<RtMidiIn> midi_port;
 };
 
 #endif
