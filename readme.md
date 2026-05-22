@@ -1,14 +1,15 @@
-## 🎹 Conversor e Analisador MIDI 1.0 para MIDI 2.0 (UMP) - Versão C++
+# 🎹 Conversor e Analisador MIDI 1.0 para MIDI 2.0 (UMP) - Versão C++
 Bem-vindo à versão de alta performance do meu Trabalho de Conclusão de Curso (TCC) desenvolvido no Instituto Federal da Paraíba (IFPB).
 
 Originalmente concebido em Python, este projeto foi portado para C++17 utilizando o framework Qt6 para garantir menor latência no processamento de pacotes UMP (Universal MIDI Packet) e uma interface gráfica mais robusta.
 
-Projeto em python: https://github.com/LucasRamosSilva-15/midi-ump-bridge
+Projeto em Python: https://github.com/LucasRamosSilva-15/midi-ump-bridge
+
 ---
+## Demonstração em Vídeo
 
-## Assista à demonstração do sistema em tempo real: [Link para o Vídeo no Drive]
+[Assista à demonstração no Google Drive](https://drive.google.com/file/d/1uy8M-NuNLCTuwC7DK9pBds0iCnk3s3lD/view?usp=sharing)
 
-https://drive.google.com/file/d/1uy8M-NuNLCTuwC7DK9pBds0iCnk3s3lD/view?usp=sharing
 
 ---
 
@@ -27,6 +28,16 @@ https://drive.google.com/file/d/1uy8M-NuNLCTuwC7DK9pBds0iCnk3s3lD/view?usp=shari
 
 ---
 
+## Funcionalidades
+
+- Captura mensagens de dispositivos MIDI 1.0 reais.
+- Converte Note On, Note Off, Control Change e Pitch Bend para mensagens MIDI 2.0 UMP.
+- Exibe os pacotes convertidos em uma interface Qt.
+- Mostra gráfico de Pitch Bend com resolução expandida.
+- Inclui teste integrado para validar o centro do Pitch Bend.
+
+---
+
 ## O que é MIDI?
 
 Se você não é da área de tecnologia musical, pode estar se perguntando o que exatamente esse sistema faz e por que ele precisa ser convertido. Uma boa regra para entender o MIDI (*Musical Instrument Digital Interface*) é: **MIDI não é áudio, é partitura digital.**
@@ -35,7 +46,8 @@ Diferente de um arquivo MP3 ou WAV, que gravam a "onda sonora" real de uma músi
 
 * **Qual nota foi tocada?** (que é indicado pela numeração da nota do teclado, como por exemplo, 51)
 * **Com que força a tecla foi pressionada?** (Velocity, que é a intensidade que aquela nota foi tocada)
-* **Quando ela foi solta?** * **O músico usou alguma alavanca de efeito?** (Pitch Bend, que é usado para alterar a afinação (pitch) de uma nota de forma contínua e temporária)
+* **Quando ela foi solta?** 
+* **O músico usou alguma alavanca de efeito?** (Pitch Bend, que é usado para alterar a afinação (pitch) de uma nota de forma contínua e temporária)
 
 O computador (ou sintetizador) lê essas instruções e "toca" os instrumentos virtuais na hora.
 
@@ -48,23 +60,20 @@ Esta PoC (Prova de Conceito) foca na ponte tecnológica entre o protocolo MIDI 1
 ---
 
 ## Tecnologias Utilizadas
-Linguagem: C++17
 
-Framework GUI: Qt 6.11.0 (MSVC 2022)
-
-Drivers MIDI: RtMidi (Realtime MIDI I/O)
-
-Build System: CMake 3.16+
-
-Padrão: MIDI 2.0 / Universal MIDI Packet (UMP)
+- **Linguagem:** C++17
+- **Framework GUI:** Qt 6.11.0 (MSVC 2022)
+- **Drivers MIDI:** RtMidi (Realtime MIDI I/O)
+- **Build System:** CMake 3.16+
+- **Padrão:** MIDI 2.0 / Universal MIDI Packet (UMP)
 
 ---
 
 ## Demonstração Visual
 Abaixo, a interface desenvolvida em Qt6 que monitora a entrada de notas e o gráfico de Pitch Bend em alta resolução.
 
-![alt text](capturas/Captura1.png)
-![alt text](capturas/Captura2.png)
+![Interface principal monitorando mensagens MIDI](capturas/Captura1.png)
+![Gráfico de Pitch Bend em alta resolução](capturas/Captura2.png)
 
 
 ---
@@ -131,7 +140,7 @@ cmake ..
 cmake --build .
 ```
 
-3. Executando
+3. Executando (dentro da pasta build)
 ```bash
 ./MIDI2Bridge
 ```
@@ -155,5 +164,5 @@ Virtualização: loopMIDI + VMPK (Virtual MIDI Piano Keyboard).
 ---
 
 ## Autor
-Desenvolvido por Lucas Ramos Silva como parte do TCC do curso tecnico em informatica no IFPB CG.
-Professor_Orientador: Carlos Henrique Alencar
+Desenvolvido por Lucas Ramos Silva como parte do TCC do curso técnico em informatica no IFPB CG.
+Professor Orientador: Carlos Henrique Alencar
