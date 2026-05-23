@@ -46,6 +46,7 @@ private:
     void start_worker();
     void stop_worker();
     void set_status(const QString& text);
+    void apply_skeuo_theme();
 
     QComboBox* port_selector;
     QPushButton* btn_refresh;
