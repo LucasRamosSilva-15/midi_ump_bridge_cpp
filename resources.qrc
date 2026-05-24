@@ -1,0 +1,15 @@
+<RCC>
+    <qresource prefix="/">
+        <file>assets/icons/settings_input_component.svg</file>
+        <file>assets/icons/refresh.svg</file>
+        <file>assets/icons/cable.svg</file>
+        <file>assets/icons/power_off.svg</file>
+        <file>assets/icons/linear_scale.svg</file>
+        <file>assets/icons/speed.svg</file>
+        <file>assets/icons/analytics.svg</file>
+        <file>assets/icons/arrow_drop_down.svg</file>
+        <file>assets/icons/arrow_right_alt.svg</file>
+        <file>assets/icons/monitor.svg</file>
+        <file>assets/icons/hard_drive.svg</file>
+    </qresource>
+</RCC>

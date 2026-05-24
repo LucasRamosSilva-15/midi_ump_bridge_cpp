@@ -8,7 +8,7 @@ set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
-find_package(Qt6 REQUIRED COMPONENTS Widgets Core)
+find_package(Qt6 REQUIRED COMPONENTS Widgets Core Svg)
 
 include(FetchContent)
 message(STATUS "Baixando dependencia e compilando: RtMidi...")
@@ -29,6 +29,7 @@ set(SOURCES
     src/ump.h
     src/gui.cpp
     src/gui.h
+    resources.qrc
 )
 
 add_executable(MIDI2Bridge ${SOURCES})
@@ -38,6 +39,7 @@ target_include_directories(MIDI2Bridge PRIVATE "src")
 target_link_libraries(MIDI2Bridge PRIVATE 
     Qt6::Widgets 
     Qt6::Core
+    Qt6::Svg
     rtmidi
 )
 

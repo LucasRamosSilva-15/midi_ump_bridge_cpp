@@ -4,6 +4,7 @@
 #include <QHBoxLayout>
 #include <QHeaderView>
 #include <QMessageBox>
+#include <QPainter>
 #include <QVBoxLayout>
 
 MidiWorker::MidiWorker(RtMidiIn *port, QObject *parent)
@@ -89,56 +90,109 @@ void MidiWorker::run() {
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), worker(nullptr) {
   setWindowTitle("Analisador MIDI 2.0 UMP - TCC IFPB");
-  resize(1200, 850);
-  setMinimumSize(1100, 760);
+  resize(1550, 850);
+  setMinimumSize(1450, 760);
 
   QWidget *container = new QWidget(this);
   container->setObjectName("mainContainer");
   QVBoxLayout *layout = new QVBoxLayout(container);
-  layout->setContentsMargins(15, 10, 15, 15);
+  layout->setContentsMargins(0, 0, 0, 15);
   layout->setSpacing(12);
+
+  QFrame *topHeader = new QFrame(this);
+  topHeader->setObjectName("topHeader");
+  QVBoxLayout *headerLayout = new QVBoxLayout(topHeader);
+  headerLayout->setContentsMargins(0, 12, 0, 12);
+  headerLayout->setSpacing(4);
 
   QLabel *title_label = new QLabel("MIDI2Bridge", this);
   title_label->setObjectName("titleLabel");
   title_label->setAlignment(Qt::AlignCenter);
 
   QLabel *subtitle_label =
-      new QLabel("Conversor e Analisador MIDI 1.0 -> MIDI 2.0 UMP", this);
+      new QLabel("CONVERSOR E ANALISADOR MIDI 1.0 -> MIDI 2.0 UMP", this);
   subtitle_label->setObjectName("subtitleLabel");
   subtitle_label->setAlignment(Qt::AlignCenter);
 
-  layout->addWidget(title_label);
-  layout->addWidget(subtitle_label);
+  headerLayout->addWidget(title_label);
+  headerLayout->addWidget(subtitle_label);
+  layout->addWidget(topHeader);
+
+  QHBoxLayout *main_split = new QHBoxLayout();
+  main_split->setContentsMargins(15, 0, 15, 0);
+  layout->addLayout(main_split, 1);
+
+  QWidget *left_widget = new QWidget(this);
+  left_widget->setFixedWidth(380);
+  QVBoxLayout *left_layout = new QVBoxLayout(left_widget);
+  left_layout->setContentsMargins(0, 0, 0, 0);
+  left_layout->setSpacing(12);
 
   QFrame *input_panel = new QFrame(this);
   input_panel->setObjectName("panel");
   input_panel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Maximum);
   QVBoxLayout *input_layout = new QVBoxLayout(input_panel);
   input_layout->setContentsMargins(15, 12, 15, 12);
+  input_layout->setSpacing(10);
 
   port_selector = new QComboBox(this);
   btn_refresh = new QPushButton("Atualizar", this);
   btn_refresh->setObjectName("secondaryButton");
+  btn_refresh->setIcon(QIcon(":/assets/icons/refresh.svg"));
+  btn_refresh->setAutoDefault(false);
+  btn_refresh->setDefault(false);
+  btn_refresh->setFocusPolicy(Qt::NoFocus);
+
   btn_connect = new QPushButton("Conectar", this);
   btn_connect->setObjectName("primaryButton");
+  btn_connect->setIcon(QIcon(":/assets/icons/cable.svg"));
+  btn_connect->setIconSize(QSize(16, 16));
+  btn_connect->setFixedHeight(30);
+  btn_connect->setAutoDefault(false);
+  btn_connect->setDefault(false);
+  btn_connect->setFocusPolicy(Qt::NoFocus);
+
   btn_disconnect = new QPushButton("Desconectar", this);
   btn_disconnect->setObjectName("dangerButton");
+  btn_disconnect->setIcon(QIcon(":/assets/icons/power_off.svg"));
+  btn_disconnect->setIconSize(QSize(16, 16));
+  btn_disconnect->setFixedHeight(30);
+  btn_disconnect->setAutoDefault(false);
+  btn_disconnect->setDefault(false);
+  btn_disconnect->setFocusPolicy(Qt::NoFocus);
+
   status_label = new QLabel(this);
   status_label->setObjectName("statusLabel");
 
-  QHBoxLayout *port_layout = new QHBoxLayout();
-  port_layout->addWidget(port_selector, 1);
-  port_layout->addWidget(btn_refresh);
-  port_layout->addWidget(btn_connect);
-  port_layout->addWidget(btn_disconnect);
+  QHBoxLayout *status_layout = new QHBoxLayout();
+  QFrame *led_status = new QFrame(this);
+  led_status->setObjectName("statusLed");
+  led_status->setFixedSize(10, 10);
+  status_layout->addWidget(led_status);
+  status_layout->addWidget(status_label, 1);
+  status_layout->setContentsMargins(0, 0, 0, 0);
 
-  QLabel *lbl_entrada = new QLabel("Entrada MIDI:", this);
+  QHBoxLayout *btn_layout = new QHBoxLayout();
+  btn_layout->addWidget(btn_connect, 1);
+  btn_layout->addWidget(btn_disconnect, 1);
+
+  QHBoxLayout *header_entrada = new QHBoxLayout();
+  QLabel *icon_entrada = new QLabel(this);
+  icon_entrada->setPixmap(
+      QIcon(":/assets/icons/settings_input_component.svg").pixmap(16, 16));
+  QLabel *lbl_entrada = new QLabel("ENTRADA MIDI", this);
   lbl_entrada->setObjectName("sectionHeader");
-  input_layout->addWidget(lbl_entrada);
-  input_layout->addLayout(port_layout);
-  input_layout->addWidget(status_label);
+  header_entrada->addWidget(icon_entrada);
+  header_entrada->addWidget(lbl_entrada);
+  header_entrada->addStretch();
 
-  layout->addWidget(input_panel);
+  input_layout->addLayout(header_entrada);
+  input_layout->addWidget(port_selector);
+  input_layout->addWidget(btn_refresh);
+  input_layout->addLayout(btn_layout);
+  input_layout->addLayout(status_layout);
+
+  left_layout->addWidget(input_panel);
 
   QFrame *pitch_panel = new QFrame(this);
   pitch_panel->setObjectName("panel");
@@ -148,16 +202,36 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), worker(nullptr) {
 
   bar = new QProgressBar(this);
   bar->setObjectName("pitchBar");
-  btn_simular = new QPushButton("Simular Pitch Bend (Teste de Software)", this);
+  btn_simular = new QPushButton("Simular Pitch Bend", this);
   btn_simular->setObjectName("secondaryButton");
+  btn_simular->setIcon(QIcon(":/assets/icons/speed.svg"));
+  btn_simular->setAutoDefault(false);
+  btn_simular->setDefault(false);
+  btn_simular->setFocusPolicy(Qt::NoFocus);
 
-  QLabel *lbl_pitch = new QLabel("Resolucao Pitch Bend (32-bit):", this);
+  QHBoxLayout *header_pitch = new QHBoxLayout();
+  QLabel *icon_pitch = new QLabel(this);
+  icon_pitch->setPixmap(
+      QIcon(":/assets/icons/linear_scale.svg").pixmap(16, 16));
+  QLabel *lbl_pitch = new QLabel("RESOLUÇÃO PITCH BEND (32-BIT)", this);
   lbl_pitch->setObjectName("sectionHeader");
-  pitch_layout->addWidget(lbl_pitch);
+  header_pitch->addWidget(icon_pitch);
+  header_pitch->addWidget(lbl_pitch);
+  header_pitch->addStretch();
+
+  pitch_layout->addLayout(header_pitch);
   pitch_layout->addWidget(bar);
   pitch_layout->addWidget(btn_simular);
 
-  layout->addWidget(pitch_panel);
+  left_layout->addWidget(pitch_panel);
+  left_layout->addStretch();
+
+  main_split->addWidget(left_widget, 0);
+
+  QWidget *right_widget = new QWidget(this);
+  QVBoxLayout *right_layout = new QVBoxLayout(right_widget);
+  right_layout->setContentsMargins(0, 0, 0, 0);
+  right_layout->setSpacing(12);
 
   QFrame *table_panel = new QFrame(this);
   table_panel->setObjectName("panel");
@@ -165,21 +239,24 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), worker(nullptr) {
   QVBoxLayout *table_layout = new QVBoxLayout(table_panel);
   table_layout->setContentsMargins(15, 12, 15, 12);
 
-  table = new QTableWidget(0, 7, this);
-  table->setHorizontalHeaderLabels({"#", "Mensagem", "Ch", "Alvo", "Valor Original",
-                                    "Valor Convertido",
-                                    "Raw Words (UMP 64-bit)"});
+  table = new QTableWidget(0, 8, this);
+  table->setHorizontalHeaderLabels({"#", "Mensagem", "Ch", "Alvo",
+                                    "Valor Original", "Valor Convertido",
+                                    "UMP Word 0", "UMP Word 1"});
   table->verticalHeader()->setVisible(false);
-  table->horizontalHeader()->setSectionResizeMode(6, QHeaderView::Stretch);
+  table->horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive);
   table->horizontalHeader()->setStretchLastSection(true);
+  table->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
   table->setAlternatingRowColors(true);
 
   table->setColumnWidth(0, 45);
-  table->setColumnWidth(1, 150);
-  table->setColumnWidth(2, 60);
-  table->setColumnWidth(3, 220);
-  table->setColumnWidth(4, 200);
-  table->setColumnWidth(5, 200);
+  table->setColumnWidth(1, 140);
+  table->setColumnWidth(2, 45);
+  table->setColumnWidth(3, 180);
+  table->setColumnWidth(4, 170);
+  table->setColumnWidth(5, 170);
+  table->setColumnWidth(6, 150);
+  table->setColumnWidth(7, 150);
 
   table->horizontalHeader()->setMinimumHeight(34);
   table->verticalHeader()->setDefaultSectionSize(32);
@@ -191,13 +268,18 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), worker(nullptr) {
   table->setFont(tableFont);
 
   QHBoxLayout *table_header_layout = new QHBoxLayout();
-  QLabel *lbl_table = new QLabel("Analisador de Pacotes UMP em Tempo Real:", this);
+  QLabel *icon_table = new QLabel(this);
+  icon_table->setPixmap(QIcon(":/assets/icons/analytics.svg").pixmap(16, 16));
+  QLabel *lbl_table =
+      new QLabel("ANALISADOR DE PACOTES UMP EM TEMPO REAL", this);
   lbl_table->setObjectName("sectionHeader");
-  
-  QLabel *badge = new QLabel("Monitor Ativo", this);
+
+  QLabel *badge =
+      new QLabel("<span style='color: #2563eb;'>●</span> Monitor Ativo", this);
   badge->setObjectName("badgeLabel");
   badge->setAlignment(Qt::AlignCenter);
 
+  table_header_layout->addWidget(icon_table);
   table_header_layout->addWidget(lbl_table);
   table_header_layout->addStretch();
   table_header_layout->addWidget(badge);
@@ -205,13 +287,52 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), worker(nullptr) {
   QFrame *h_line = new QFrame();
   h_line->setFrameShape(QFrame::HLine);
   h_line->setFrameShadow(QFrame::Sunken);
-  h_line->setStyleSheet("border: 1px solid #c0c0c0; border-bottom: 1px solid #ffffff;");
+  h_line->setStyleSheet(
+      "border: 1px solid #c0c0c0; border-bottom: 1px solid #ffffff;");
 
   table_layout->addLayout(table_header_layout);
   table_layout->addWidget(h_line);
   table_layout->addWidget(table, 1);
 
-  layout->addWidget(table_panel, 2);
+  right_layout->addWidget(table_panel, 1);
+
+  QFrame *footer_panel = new QFrame(this);
+  footer_panel->setObjectName("panel");
+  footer_panel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Maximum);
+  QHBoxLayout *footer_layout = new QHBoxLayout(footer_panel);
+  footer_layout->setContentsMargins(15, 8, 15, 8);
+
+  QLabel *icon_con = new QLabel(this);
+  icon_con->setPixmap(QIcon(":/assets/icons/monitor.svg").pixmap(14, 14));
+  QLabel *lbl_status_con = new QLabel(
+      "<span style='color: #2563eb;'>●</span> Status: Conectado", this);
+  lbl_status_con->setObjectName("footerLabel");
+
+  QLabel *icon_taxa = new QLabel(this);
+  icon_taxa->setPixmap(
+      QIcon(":/assets/icons/arrow_right_alt.svg").pixmap(14, 14));
+  QLabel *lbl_taxa = new QLabel("Taxa UMP: 0 msgs/s", this);
+  lbl_taxa->setObjectName("footerLabel");
+
+  QLabel *icon_buf = new QLabel(this);
+  icon_buf->setPixmap(QIcon(":/assets/icons/hard_drive.svg").pixmap(14, 14));
+  QLabel *lbl_buffer = new QLabel("Buffer: 0/1024", this);
+  lbl_buffer->setObjectName("footerLabel");
+
+  footer_layout->addWidget(icon_con);
+  footer_layout->addWidget(lbl_status_con);
+  footer_layout->addStretch();
+  footer_layout->addWidget(icon_taxa);
+  footer_layout->addWidget(lbl_taxa);
+  footer_layout->addStretch();
+  footer_layout->addWidget(icon_buf);
+  footer_layout->addWidget(lbl_buffer);
+
+  right_layout->addWidget(footer_panel);
+
+  main_split->addWidget(right_widget, 1);
+  main_split->setStretch(0, 0);
+  main_split->setStretch(1, 1);
 
   setCentralWidget(container);
 
@@ -344,7 +465,8 @@ void MainWindow::add_table_row(const QVariantMap &data) {
   int row_pos = table->rowCount();
   table->insertRow(row_pos);
 
-  QTableWidgetItem *idx_item = new QTableWidgetItem(QString::number(row_pos + 1));
+  QTableWidgetItem *idx_item =
+      new QTableWidgetItem(QString::number(row_pos + 1));
   idx_item->setTextAlignment(Qt::AlignCenter);
   table->setItem(row_pos, 0, idx_item);
   table->setItem(row_pos, 1,
@@ -358,14 +480,19 @@ void MainWindow::add_table_row(const QVariantMap &data) {
   table->setItem(row_pos, 5,
                  new QTableWidgetItem(data.value("value").toString()));
 
-  QString raw_words = QString("%1 | %2").arg(data.value("raw_w1").toString(),
-                                             data.value("raw_w2").toString());
-  QTableWidgetItem *raw_item = new QTableWidgetItem(raw_words);
+  QTableWidgetItem *w0_item =
+      new QTableWidgetItem(data.value("raw_w1").toString());
+  QTableWidgetItem *w1_item =
+      new QTableWidgetItem(data.value("raw_w2").toString());
+
   QFont mono_font("Consolas");
   mono_font.setStyleHint(QFont::Monospace);
   mono_font.setPixelSize(13);
-  raw_item->setFont(mono_font);
-  table->setItem(row_pos, 6, raw_item);
+  w0_item->setFont(mono_font);
+  w1_item->setFont(mono_font);
+
+  table->setItem(row_pos, 6, w0_item);
+  table->setItem(row_pos, 7, w1_item);
   table->scrollToBottom();
 }
 
@@ -375,70 +502,90 @@ void MainWindow::apply_skeuo_theme() {
       font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
     }
     QMainWindow {
-      background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #d8e2ea, stop: 1 #b0bcc6);
+      background: #d5dbe2;
     }
     #mainContainer {
       background: transparent;
     }
+    #topHeader {
+      background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #e8eef5, stop: 1 #c3c6d7);
+      border-bottom: 2px solid #737686;
+    }
     #titleLabel {
-      font-size: 24px;
+      font-size: 28px;
       font-weight: bold;
-      color: #2c3e50;
+      color: #161c21;
+      letter-spacing: 1px;
     }
     #subtitleLabel {
       font-size: 13px;
-      color: #5d6d7e;
-      margin-bottom: 6px;
+      color: #555f6d;
+      letter-spacing: 1px;
     }
     #badgeLabel {
-      background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #fbfbfc, stop: 1 #eaeded);
-      border: 1px solid #aab7c4;
+      background: #e8eef5;
+      border: 1px solid #c3c6d7;
       border-radius: 3px;
       padding: 2px 8px;
       font-size: 10px;
       font-weight: bold;
-      color: #34495e;
-      border-top: 1px solid #ffffff;
-      border-bottom: 1px solid #95a5a6;
+      color: #161c21;
     }
     #panel {
-      background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #fbfbfc, stop: 1 #e3e7eb);
-      border: 1px solid #999999;
+      background: #f6faff;
+      border: 1px solid #737686;
       border-top: 1px solid #ffffff;
-      border-bottom: 2px solid #666666;
+      border-bottom: 2px solid #737686;
       border-radius: 8px;
     }
     #sectionHeader {
-      font-size: 15px;
+      font-size: 13px;
       font-weight: bold;
-      color: #2c3e50;
+      color: #161c21;
       padding-bottom: 4px;
     }
+    #statusLed {
+      background: qradialgradient(cx: 0.35, cy: 0.35, radius: 0.8, fx: 0.35, fy: 0.35, stop: 0 #8fd3ff, stop: 0.45 #2563eb, stop: 1 #004ac6);
+      border: 1px solid #003ea8;
+      border-radius: 5px;
+      min-width: 10px;
+      min-height: 10px;
+      max-width: 10px;
+      max-height: 10px;
+    }
     #statusLabel {
-      color: #2c3e50;
+      color: #161c21;
       font-style: italic;
       font-weight: bold;
-      margin-top: 4px;
+      margin-top: 0px;
+    }
+    #footerLabel {
+      color: #161c21;
+      font-size: 12px;
+      font-weight: bold;
     }
     QPushButton {
-      border: 1px solid #7a7a7a;
+      outline: none;
+      border: 1px solid #737686;
       border-top: 1px solid #ffffff;
-      border-bottom: 2px solid #5a5a5a;
+      border-bottom: 2px solid #555f6d;
       border-radius: 4px;
-      padding: 6px 14px;
+      padding: 6px 12px;
       font-weight: bold;
-      color: #2b2b2b;
-      background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #f0f0f0, stop: 0.4 #e0e0e0, stop: 0.5 #d4d4d4, stop: 1 #c0c0c0);
+      color: #161c21;
+      background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #ffffff, stop: 1 #dde3ea);
+    }
+    QPushButton:focus {
+      outline: none;
     }
     QPushButton:hover {
-      background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #ffffff, stop: 0.4 #f0f0f0, stop: 0.5 #e4e4e4, stop: 1 #d0d0d0);
+      background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #ffffff, stop: 1 #e8eef5);
     }
     QPushButton:pressed {
-      background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #c0c0c0, stop: 1 #e0e0e0);
-      border-top: 2px solid #5a5a5a;
+      background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #dde3ea, stop: 1 #c3c6d7);
+      border-top: 2px solid #737686;
       border-bottom: 1px solid #ffffff;
-      padding-top: 7px;
-      padding-bottom: 5px;
+      padding: 7px 12px 5px 12px;
     }
     QPushButton:disabled {
       color: #999999;
@@ -447,81 +594,96 @@ void MainWindow::apply_skeuo_theme() {
     }
     QPushButton#primaryButton {
       color: white;
-      border: 1px solid #1a5276;
+      border: 1px solid #004ac6;
       border-top: 1px solid #85c1e9;
-      border-bottom: 2px solid #154360;
-      background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #5dade2, stop: 0.4 #3498db, stop: 0.5 #2980b9, stop: 1 #1f618d);
+      border-bottom: 2px solid #003699;
+      background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #5dade2, stop: 0.4 #2563eb, stop: 1 #004ac6);
     }
     QPushButton#primaryButton:hover {
-      background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #85c1e9, stop: 0.4 #5dade2, stop: 0.5 #3498db, stop: 1 #2980b9);
+      background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #85c1e9, stop: 0.4 #5dade2, stop: 1 #2563eb);
     }
     QPushButton#primaryButton:pressed {
-      background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #1f618d, stop: 1 #3498db);
-      border-top: 2px solid #154360;
+      background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #004ac6, stop: 1 #2563eb);
+      border-top: 2px solid #003699;
       border-bottom: 1px solid #85c1e9;
-      padding-top: 7px;
-      padding-bottom: 5px;
+      padding: 7px 12px 5px 12px;
     }
     QPushButton#dangerButton {
       color: white;
-      border: 1px solid #7b241c;
+      font-weight: bold;
+      border: 1px solid #8b0000;
       border-top: 1px solid #f1948a;
-      border-bottom: 2px solid #641e16;
-      background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #e74c3c, stop: 0.4 #cb4335, stop: 0.5 #b03a2e, stop: 1 #943126);
+      border-radius: 4px;
+      padding: 6px 12px;
+      background: #c71f1f;
     }
     QPushButton#dangerButton:hover {
-      background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #f1948a, stop: 0.4 #e74c3c, stop: 0.5 #cb4335, stop: 1 #b03a2e);
+      color: white;
+      border: 1px solid #8b0000;
+      border-top: 1px solid #f1948a;
+      padding: 6px 12px;
+      background: #d52022;
     }
     QPushButton#dangerButton:pressed {
-      background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #943126, stop: 1 #cb4335);
-      border-top: 2px solid #641e16;
-      border-bottom: 1px solid #f1948a;
-      padding-top: 7px;
-      padding-bottom: 5px;
+      color: white;
+      border: 1px solid #8b0000;
+      border-top: 1px solid #5f0006;
+      padding: 6px 12px;
+      background: #9f000e;
+    }
+    QPushButton#dangerButton:focus {
+      color: white;
+      border: 1px solid #8b0000;
+      border-top: 1px solid #f1948a;
+      padding: 6px 12px;
+    }
+    QPushButton#dangerButton:disabled {
+      color: #eeeeee;
+      border: 1px solid #999999;
+      padding: 6px 12px;
+      background: #b0b0b0;
     }
     QComboBox {
-      border: 1px solid #888888;
-      border-top: 2px solid #555555;
-      border-left: 2px solid #666666;
-      border-bottom: 1px solid #ffffff;
-      border-right: 1px solid #ffffff;
+      border: 1px solid #c3c6d7;
+      border-top: 2px solid #737686;
       border-radius: 4px;
-      padding: 4px 8px;
-      background: #e8ecef;
-      color: #1c2833;
+      padding: 6px 36px 6px 8px;
+      background: #e8eef5;
+      color: #161c21;
+      font-family: "JetBrains Mono", Consolas, monospace;
     }
     QComboBox::drop-down {
       subcontrol-origin: padding;
       subcontrol-position: top right;
-      width: 24px;
-      border-left: 1px solid #aaaaaa;
+      width: 28px;
+      border-left: 1px solid #c3c6d7;
       background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #f0f0f0, stop: 1 #c0c0c0);
       border-top-right-radius: 3px;
       border-bottom-right-radius: 3px;
     }
+    QComboBox::down-arrow {
+      image: url(:/assets/icons/arrow_drop_down.svg);
+      width: 18px;
+      height: 18px;
+      margin-right: 4px;
+    }
     QTableWidget {
-      background-color: #fcfcfc;
-      alternate-background-color: #eef2f5;
-      border: 1px solid #888888;
-      border-top: 2px solid #555555;
-      border-left: 2px solid #666666;
-      border-bottom: 1px solid #ffffff;
-      border-right: 1px solid #ffffff;
+      background-color: #f0f4f8;
+      alternate-background-color: #eef4fb;
+      border: 1px solid #c3c6d7;
+      border-top: 2px solid #737686;
       border-radius: 4px;
-      gridline-color: #d5d8dc;
-      color: #1c2833;
+      gridline-color: #dde3ea;
+      color: #161c21;
       selection-background-color: #d6eaf8;
-      selection-color: #1c2833;
+      selection-color: #161c21;
     }
     QHeaderView::section:horizontal {
-      background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #f0f0f0, stop: 0.4 #e0e0e0, stop: 0.5 #d4d4d4, stop: 1 #c0c0c0);
-      color: #1c2833;
+      background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #eef4fb, stop: 1 #dde3ea);
+      color: #161c21;
       padding: 6px;
-      border: 1px solid #888888;
-      border-top: 1px solid #ffffff;
-      border-left: 1px solid #ffffff;
-      border-bottom: 2px solid #555555;
-      border-right: 2px solid #555555;
+      border: 1px solid #c3c6d7;
+      border-bottom: 2px solid #737686;
       font-weight: bold;
     }
     QTableCornerButton::section {
@@ -529,44 +691,37 @@ void MainWindow::apply_skeuo_theme() {
       border: none;
     }
     QScrollBar:vertical {
-      border: 1px solid #aab7c4;
-      background: #eaeded;
+      border: 1px solid #c3c6d7;
+      background: #e8eef5;
       width: 14px;
       margin: 0px 0 0px 0;
       border-radius: 2px;
     }
     QScrollBar::handle:vertical {
-      background: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 0, stop: 0 #d5d9df, stop: 1 #fbfbfc);
-      border: 1px solid #95a5a6;
+      background: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 0, stop: 0 #dde3ea, stop: 1 #f6faff);
+      border: 1px solid #737686;
       min-height: 20px;
       border-radius: 4px;
     }
     QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
-      border: 1px solid #95a5a6;
-      background: #eaeded;
+      border: 1px solid #c3c6d7;
+      background: #e8eef5;
       height: 14px;
       subcontrol-origin: margin;
     }
-    QScrollBar::add-line:vertical {
-      subcontrol-position: bottom;
-    }
-    QScrollBar::sub-line:vertical {
-      subcontrol-position: top;
-    }
     QProgressBar {
-      border: 1px solid #888888;
-      border-top: 2px solid #555555;
-      border-left: 2px solid #666666;
+      border: 1px solid #737686;
+      border-top: 2px solid #434655;
       border-bottom: 1px solid #ffffff;
-      border-right: 1px solid #ffffff;
       border-radius: 6px;
-      background: #d0d4d8;
+      background: #d5dbe2;
       text-align: center;
-      color: #2c3e50;
+      color: #161c21;
       font-weight: bold;
+      min-height: 28px;
     }
     QProgressBar::chunk {
-      background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #5dade2, stop: 0.4 #3498db, stop: 0.5 #2980b9, stop: 1 #1f618d);
+      background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #5dade2, stop: 0.4 #2563eb, stop: 1 #004ac6);
       border-radius: 4px;
       margin: 2px;
     }

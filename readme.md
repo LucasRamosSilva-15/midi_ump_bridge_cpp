@@ -63,7 +63,8 @@ Esta PoC (Prova de Conceito) foca na ponte tecnológica entre o protocolo MIDI 1
 ## Tecnologias Utilizadas
 
 - **Linguagem:** C++17
-- **Framework GUI:** Qt 6.11.0 (MSVC 2022)
+- **Framework GUI:** Qt 6.11.0 (MSVC 2022) com módulo `Qt6::Svg` para ícones vetoriais.
+- **Design Visual:** Estilo Skeuomórfico técnico com ícones *Material Symbols*.
 - **Drivers MIDI:** RtMidi (Realtime MIDI I/O)
 - **Build System:** CMake 3.16+
 - **Padrão:** MIDI 2.0 / Universal MIDI Packet (UMP)
@@ -86,7 +87,9 @@ src/ump.h: Estrutura de dados para mensagens de 64 bits e lógica de análise de
 
 src/converter.cpp: Implementação da matemática de conversão (ex: upscale de Velocity para 16-bit).
 
-src/gui.cpp: Gerenciamento da janela principal e dos sinais de atualização da interface.
+src/gui.cpp: Gerenciamento da janela principal e dos sinais de atualização da interface. O projeto conta com um forte polimento visual skeuomórfico para emular hardwares reais e ferramentas laboratoriais (veja `Design_skeuo.md`).
+
+resources.qrc: Arquivo de recursos do Qt que embarca a iconografia vetorial (SVG) nativamente no executável.
 
 src/main.cpp: Ponto de entrada que gerencia o console de seleção de portas e a inicialização do Qt.
 
@@ -126,10 +129,10 @@ Ao abrir, o terminal solicitará a escolha da porta MIDI. Após a seleção, a i
 O processo no Linux (distribuições baseadas em Debian/Ubuntu) é nativo e simplificado, pois as bibliotecas são instaladas e resolvidas diretamente pelo sistema.
 
 1. Instalando Dependências
-Abra o terminal e instale os pacotes de compilação, o framework Qt6 e a biblioteca ALSA (necessária para o RtMidi gerenciar dispositivos de áudio):
+Abra o terminal e instale os pacotes de compilação, o framework Qt6 (incluindo suporte a SVGs) e a biblioteca ALSA (necessária para o RtMidi gerenciar dispositivos de áudio):
 ```bash
 sudo apt update
-sudo apt install build-essential cmake qt6-base-dev libasound2-dev
+sudo apt install build-essential cmake qt6-base-dev libqt6svg6-dev libasound2-dev
 ```
 
 2. Compilando o Projeto
