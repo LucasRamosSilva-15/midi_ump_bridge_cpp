@@ -58,6 +58,12 @@ private:
     QPushButton* btn_simular;
     MidiWorker* worker;
     std::unique_ptr<RtMidiIn> midi_port;
+
+    QLabel* lbl_status_con;
+    QLabel* lbl_taxa;
+    QLabel* lbl_buffer;
+    class QTimer* timer_taxa;
+    int msg_count;
 };
 
 #endif

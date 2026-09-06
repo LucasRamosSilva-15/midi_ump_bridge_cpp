@@ -74,8 +74,8 @@ Esta PoC (Prova de Conceito) foca na ponte tecnológica entre o protocolo MIDI 1
 ## Demonstração Visual
 Abaixo, a interface desenvolvida em Qt6 que monitora a entrada de notas e o gráfico de Pitch Bend em alta resolução.
 
-![Interface principal monitorando mensagens MIDI](capturas/Captura1.png)
-![Gráfico de Pitch Bend em alta resolução](capturas/Captura2.png)
+![Interface principal monitorando mensagens MIDI](capturas/Captura4.png)
+![Gráfico de Pitch Bend em alta resolução](capturas/Captura3.png)
 
 
 ---

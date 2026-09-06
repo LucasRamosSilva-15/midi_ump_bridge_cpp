@@ -1,3 +1,4 @@
+#include <QTimer>
 #include "gui.h"
 #include "converter.h"
 #include <QFrame>
@@ -304,19 +305,19 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), worker(nullptr) {
 
   QLabel *icon_con = new QLabel(this);
   icon_con->setPixmap(QIcon(":/assets/icons/monitor.svg").pixmap(14, 14));
-  QLabel *lbl_status_con = new QLabel(
-      "<span style='color: #2563eb;'>●</span> Status: Conectado", this);
+  lbl_status_con = new QLabel(
+      "<span style='color: #ef4444;'>●</span> Status: Desconectado", this);
   lbl_status_con->setObjectName("footerLabel");
 
   QLabel *icon_taxa = new QLabel(this);
   icon_taxa->setPixmap(
       QIcon(":/assets/icons/arrow_right_alt.svg").pixmap(14, 14));
-  QLabel *lbl_taxa = new QLabel("Taxa UMP: 0 msgs/s", this);
+  lbl_taxa = new QLabel("Taxa UMP: 0 msgs/s", this);
   lbl_taxa->setObjectName("footerLabel");
 
   QLabel *icon_buf = new QLabel(this);
   icon_buf->setPixmap(QIcon(":/assets/icons/hard_drive.svg").pixmap(14, 14));
-  QLabel *lbl_buffer = new QLabel("Buffer: 0/1024", this);
+  lbl_buffer = new QLabel("Buffer: 0/1024", this);
   lbl_buffer->setObjectName("footerLabel");
 
   footer_layout->addWidget(icon_con);
@@ -343,6 +344,15 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), worker(nullptr) {
           &MainWindow::disconnect_port);
   connect(btn_simular, &QPushButton::clicked, this,
           &MainWindow::simular_pitch_bend);
+
+  
+  msg_count = 0;
+  timer_taxa = new QTimer(this);
+  connect(timer_taxa, &QTimer::timeout, this, [this]() {
+      lbl_taxa->setText(QString("Taxa UMP: %1 msgs/s").arg(msg_count));
+      msg_count = 0;
+  });
+  timer_taxa->start(1000);
 
   refresh_ports();
   apply_skeuo_theme();
@@ -400,12 +410,14 @@ void MainWindow::connect_selected_port() {
 
   start_worker();
   set_status(QString("Conectado: %1").arg(port_name));
+  lbl_status_con->setText("<span style='color: #10b981;'>●</span> Status: Conectado");
 }
 
 void MainWindow::disconnect_port() {
   stop_worker();
   midi_port.reset();
   set_status("Entrada MIDI desconectada.");
+  lbl_status_con->setText("<span style='color: #ef4444;'>●</span> Status: Desconectado");
 }
 
 void MainWindow::start_worker() {
@@ -464,6 +476,10 @@ void MainWindow::add_table_row(const QVariantMap &data) {
 
   int row_pos = table->rowCount();
   table->insertRow(row_pos);
+  msg_count++;
+  if (lbl_buffer) {
+    lbl_buffer->setText(QString("Buffer: %1/1024").arg(table->rowCount()));
+  }
 
   QTableWidgetItem *idx_item =
       new QTableWidgetItem(QString::number(row_pos + 1));
