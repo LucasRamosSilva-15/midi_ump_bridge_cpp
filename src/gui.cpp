@@ -8,8 +8,8 @@
 #include <QPainter>
 #include <QVBoxLayout>
 
-MidiWorker::MidiWorker(RtMidiIn *port, QObject *parent)
-    : QThread(parent), m_port(port), m_last_note(60) {}
+MidiWorker::MidiWorker(RtMidiIn *port, RtMidiOut *out_port, QObject *parent)
+    : QThread(parent), m_port(port), m_out_port(out_port), m_last_note(60) {}
 
 MidiWorker::~MidiWorker() {
   requestInterruption();
@@ -39,6 +39,8 @@ void MidiWorker::run() {
       QThread::msleep(2);
       continue;
     }
+
+
 
     if (message.size() >= 2) {
       uint8_t status = message[0] & 0xF0;
@@ -78,6 +80,12 @@ void MidiWorker::run() {
       }
 
       if (has_ump) {
+        if (m_out_port) {
+            std::vector<unsigned char> sysex = ump_msg.toSysEx();
+            try {
+                m_out_port->sendMessage(&sysex);
+            } catch (...) {}
+        }
         QMap<QString, QString> data = ump_msg.analyze();
         QVariantMap vmap;
         for (auto key : data.keys())
@@ -225,6 +233,72 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), worker(nullptr) {
   pitch_layout->addWidget(btn_simular);
 
   left_layout->addWidget(pitch_panel);
+
+  QFrame *output_panel = new QFrame(this);
+  output_panel->setObjectName("panel");
+  output_panel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Maximum);
+  QVBoxLayout *output_layout = new QVBoxLayout(output_panel);
+  output_layout->setContentsMargins(15, 12, 15, 12);
+  output_layout->setSpacing(10);
+
+  port_selector_out = new QComboBox(this);
+  btn_refresh_out = new QPushButton("Atualizar", this);
+  btn_refresh_out->setObjectName("secondaryButton");
+  btn_refresh_out->setIcon(QIcon(":/assets/icons/refresh.svg"));
+  btn_refresh_out->setAutoDefault(false);
+  btn_refresh_out->setDefault(false);
+  btn_refresh_out->setFocusPolicy(Qt::NoFocus);
+
+  btn_connect_out = new QPushButton("Conectar", this);
+  btn_connect_out->setObjectName("primaryButton");
+  btn_connect_out->setIcon(QIcon(":/assets/icons/cable.svg"));
+  btn_connect_out->setIconSize(QSize(16, 16));
+  btn_connect_out->setFixedHeight(30);
+  btn_connect_out->setAutoDefault(false);
+  btn_connect_out->setDefault(false);
+  btn_connect_out->setFocusPolicy(Qt::NoFocus);
+
+  btn_disconnect_out = new QPushButton("Desconectar", this);
+  btn_disconnect_out->setObjectName("dangerButton");
+  btn_disconnect_out->setIcon(QIcon(":/assets/icons/power_off.svg"));
+  btn_disconnect_out->setIconSize(QSize(16, 16));
+  btn_disconnect_out->setFixedHeight(30);
+  btn_disconnect_out->setAutoDefault(false);
+  btn_disconnect_out->setDefault(false);
+  btn_disconnect_out->setFocusPolicy(Qt::NoFocus);
+
+  status_label_out = new QLabel(this);
+  status_label_out->setObjectName("statusLabel");
+
+  QHBoxLayout *status_layout_out = new QHBoxLayout();
+  QFrame *led_status_out = new QFrame(this);
+  led_status_out->setObjectName("statusLed");
+  led_status_out->setFixedSize(10, 10);
+  status_layout_out->addWidget(led_status_out);
+  status_layout_out->addWidget(status_label_out, 1);
+  status_layout_out->setContentsMargins(0, 0, 0, 0);
+
+  QHBoxLayout *btn_layout_out = new QHBoxLayout();
+  btn_layout_out->addWidget(btn_connect_out, 1);
+  btn_layout_out->addWidget(btn_disconnect_out, 1);
+
+  QHBoxLayout *header_saida = new QHBoxLayout();
+  QLabel *icon_saida = new QLabel(this);
+  icon_saida->setPixmap(QIcon(":/assets/icons/settings_input_component.svg").pixmap(16, 16));
+  QLabel *lbl_saida = new QLabel("SAÍDA MIDI", this);
+  lbl_saida->setObjectName("sectionHeader");
+  header_saida->addWidget(icon_saida);
+  header_saida->addWidget(lbl_saida);
+  header_saida->addStretch();
+
+  output_layout->addLayout(header_saida);
+  output_layout->addWidget(port_selector_out);
+  output_layout->addWidget(btn_refresh_out);
+  output_layout->addLayout(btn_layout_out);
+  output_layout->addLayout(status_layout_out);
+
+  left_layout->addWidget(output_panel);
+
   left_layout->addStretch();
 
   main_split->addWidget(left_widget, 0);
@@ -355,10 +429,111 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), worker(nullptr) {
   timer_taxa->start(1000);
 
   refresh_ports();
+
+  connect(btn_refresh_out, &QPushButton::clicked, this, &MainWindow::refresh_ports_out);
+  connect(btn_connect_out, &QPushButton::clicked, this, &MainWindow::connect_selected_port_out);
+  connect(btn_disconnect_out, &QPushButton::clicked, this, &MainWindow::disconnect_port_out);
+  refresh_ports_out();
+
   apply_skeuo_theme();
 }
 
-MainWindow::~MainWindow() { stop_worker(); }
+MainWindow::~MainWindow() { stop_worker(); disconnect_port_out(); }
+
+void MainWindow::refresh_ports_out() {
+  port_selector_out->clear();
+  try {
+    RtMidiOut output;
+    const unsigned int port_count = output.getPortCount();
+    for (unsigned int i = 0; i < port_count; ++i) {
+      port_selector_out->addItem(QString::fromStdString(output.getPortName(i)), i);
+    }
+    if (port_count == 0) {
+      status_label_out->setText("Status: Nenhuma saída MIDI encontrada.");
+    } else {
+      status_label_out->setText(QString("Status: %1 saída(s) MIDI encontrada(s).").arg(port_count));
+    }
+  } catch (RtMidiError &error) {
+    status_label_out->setText(QString("Status: Erro ao listar portas MIDI: %1").arg(QString::fromStdString(error.getMessage())));
+  }
+  btn_connect_out->setEnabled(port_selector_out->count() > 0);
+  btn_disconnect_out->setEnabled(midi_port_out != nullptr);
+}
+
+void MainWindow::connect_selected_port_out() {
+  if (port_selector_out->currentIndex() < 0) {
+    status_label_out->setText("Status: Selecione uma saída MIDI antes de conectar.");
+    return;
+  }
+  
+  bool worker_was_running = (worker && worker->isRunning());
+  if (worker_was_running) {
+      worker->requestInterruption();
+      worker->wait();
+      delete worker;
+      worker = nullptr;
+  }
+  
+  const unsigned int port_index = port_selector_out->currentData().toUInt();
+  const QString port_name = port_selector_out->currentText();
+
+  if (midi_port_out) {
+      midi_port_out.reset();
+      btn_connect_out->setEnabled(port_selector_out->count() > 0);
+      btn_disconnect_out->setEnabled(false);
+  }
+
+  try {
+    auto new_port = std::make_unique<RtMidiOut>();
+    new_port->openPort(port_index);
+    midi_port_out = std::move(new_port);
+  } catch (RtMidiError &error) {
+    midi_port_out.reset();
+    QMessageBox::warning(this, "Erro MIDI", QString::fromStdString(error.getMessage()));
+    status_label_out->setText("Status: Falha ao conectar a saída MIDI.");
+    if (worker_was_running) {
+        worker = new MidiWorker(midi_port.get(), midi_port_out.get(), this);
+        connect(worker, &MidiWorker::log_signal, this, &MainWindow::add_table_row);
+        connect(worker, &MidiWorker::pitch_signal, bar, &QProgressBar::setValue);
+        worker->start();
+    }
+    return;
+  }
+
+  btn_connect_out->setEnabled(false);
+  btn_disconnect_out->setEnabled(true);
+  status_label_out->setText(QString("Status: Conectado: %1").arg(port_name));
+  
+  if (worker_was_running) {
+      worker = new MidiWorker(midi_port.get(), midi_port_out.get(), this);
+      connect(worker, &MidiWorker::log_signal, this, &MainWindow::add_table_row);
+      connect(worker, &MidiWorker::pitch_signal, bar, &QProgressBar::setValue);
+      worker->start();
+  }
+}
+
+void MainWindow::disconnect_port_out() {
+  bool worker_was_running = (worker && worker->isRunning());
+  if (worker_was_running) {
+      worker->requestInterruption();
+      worker->wait();
+      delete worker;
+      worker = nullptr;
+  }
+
+  midi_port_out.reset();
+  btn_connect_out->setEnabled(port_selector_out->count() > 0);
+  btn_disconnect_out->setEnabled(false);
+  status_label_out->setText("Status: Saída MIDI desconectada.");
+  
+  if (worker_was_running) {
+      worker = new MidiWorker(midi_port.get(), midi_port_out.get(), this);
+      connect(worker, &MidiWorker::log_signal, this, &MainWindow::add_table_row);
+      connect(worker, &MidiWorker::pitch_signal, bar, &QProgressBar::setValue);
+      worker->start();
+  }
+}
+
 
 void MainWindow::refresh_ports() {
   port_selector->clear();
@@ -425,7 +600,7 @@ void MainWindow::start_worker() {
     return;
   }
 
-  worker = new MidiWorker(midi_port.get(), this);
+  worker = new MidiWorker(midi_port.get(), midi_port_out.get(), this);
   connect(worker, &MidiWorker::log_signal, this, &MainWindow::add_table_row);
   connect(worker, &MidiWorker::pitch_signal, bar, &QProgressBar::setValue);
   worker->start();

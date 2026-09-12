@@ -16,7 +16,7 @@
 class MidiWorker : public QThread {
     Q_OBJECT
 public:
-    explicit MidiWorker(RtMidiIn* port, QObject *parent = nullptr);
+    explicit MidiWorker(RtMidiIn* port, RtMidiOut* out_port = nullptr, QObject *parent = nullptr);
     ~MidiWorker();
     void run() override;
 
@@ -26,6 +26,7 @@ signals:
 
 private:
     RtMidiIn* m_port;
+    RtMidiOut* m_out_port;
     int m_last_note;
 };
 
@@ -39,6 +40,9 @@ private slots:
     void refresh_ports();
     void connect_selected_port();
     void disconnect_port();
+    void refresh_ports_out();
+    void connect_selected_port_out();
+    void disconnect_port_out();
     void simular_pitch_bend();
     void add_table_row(const QVariantMap& data);
 
@@ -53,11 +57,19 @@ private:
     QPushButton* btn_connect;
     QPushButton* btn_disconnect;
     QLabel* status_label;
+
+    QComboBox* port_selector_out;
+    QPushButton* btn_refresh_out;
+    QPushButton* btn_connect_out;
+    QPushButton* btn_disconnect_out;
+    QLabel* status_label_out;
+
     QTableWidget* table;
     QProgressBar* bar;
     QPushButton* btn_simular;
     MidiWorker* worker;
     std::unique_ptr<RtMidiIn> midi_port;
+    std::unique_ptr<RtMidiOut> midi_port_out;
 
     QLabel* lbl_status_con;
     QLabel* lbl_taxa;

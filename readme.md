@@ -76,8 +76,7 @@ Abaixo, a interface desenvolvida em Qt6 que monitora a entrada de notas e o grá
 
 ![Interface principal monitorando mensagens MIDI](capturas/Captura4.png)
 ![Gráfico de Pitch Bend em alta resolução](capturas/Captura3.png)
-
-
+![Osciloscópio capturando a mensagem MIDI 2.0](capturas/Captura5.png)
 ---
 
 ## Estrutura do Código (C++)

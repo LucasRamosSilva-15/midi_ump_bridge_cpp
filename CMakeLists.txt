@@ -20,6 +20,7 @@ FetchContent_Declare(
 set(RTMIDI_BUILD_TESTING OFF CACHE BOOL "Desativar testes" FORCE)
 set(RTMIDI_BUILD_STATIC_LIBS ON CACHE BOOL "Build estatico" FORCE)
 set(RTMIDI_BUILD_SHARED_LIBS OFF CACHE BOOL "Build compartilhado" FORCE)
+set(RTMIDI_API_JACK OFF CACHE BOOL "Disable JACK" FORCE)
 FetchContent_MakeAvailable(rtmidi)
 
 set(SOURCES

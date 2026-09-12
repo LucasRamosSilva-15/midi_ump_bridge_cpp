@@ -14,6 +14,35 @@ public:
 
     uint64_t ump64() const { return ((uint64_t)word1 << 32) | word2; }
 
+    std::vector<unsigned char> toSysEx() const {
+        std::vector<unsigned char> sysex;
+        sysex.push_back(0xF0);
+        sysex.push_back(0x7D); // Educational/Research ID
+        
+        uint64_t u64 = ump64();
+        for (int i = 0; i < 10; ++i) {
+            sysex.push_back(static_cast<unsigned char>((u64 >> (i * 7)) & 0x7F));
+        }
+        
+        sysex.push_back(0xF7);
+        return sysex;
+    }
+
+    static bool fromSysEx(const std::vector<unsigned char>& sysex, UMPMessage& out_msg) {
+        if (sysex.size() < 13) return false;
+        if (sysex[0] != 0xF0 || sysex[1] != 0x7D || sysex.back() != 0xF7) return false;
+        
+        uint64_t u64 = 0;
+        for (int i = 0; i < 10; ++i) {
+            u64 |= (static_cast<uint64_t>(sysex[2 + i]) & 0x7F) << (i * 7);
+        }
+        
+        out_msg.word1 = static_cast<uint32_t>(u64 >> 32);
+        out_msg.word2 = static_cast<uint32_t>(u64 & 0xFFFFFFFF);
+        return true;
+    }
+
+
     QMap<QString, QString> analyze() const {
         QMap<QString, QString> data;
         uint8_t mt = (word1 >> 28) & 0xF;
