@@ -168,7 +168,7 @@ Virtualização: loopMIDI + VMPK (Virtual MIDI Piano Keyboard).
 
 ## Diagrama de Atividade
 
-![Diagrama de Atividade](capturas/Diagrama de Atividade Projeto de TCC.png)
+![Diagrama de Atividade](capturas/Diagrama_de_Atividade_Projeto_de_TCC.png)
 
 ---
 
