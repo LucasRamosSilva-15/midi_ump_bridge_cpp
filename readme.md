@@ -166,6 +166,18 @@ Virtualização: loopMIDI + VMPK (Virtual MIDI Piano Keyboard).
 
 ---
 
+## Diagrama de Atividade
+
+![Diagrama de Atividade](capturas/Diagrama de Atividade Projeto de TCC.png)
+
+---
+
+## Diagrama de Classes
+
+![Diagrama de Classes](capturas/Midi_UMP_Bridge.png)
+
+---
+
 ## Autor
 Desenvolvido por Lucas Ramos Silva como parte do TCC do curso técnico em informatica no IFPB CG.
 Professor Orientador: Carlos Henrique Alencar Almeida
