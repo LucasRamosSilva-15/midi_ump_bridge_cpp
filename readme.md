@@ -168,4 +168,4 @@ Virtualização: loopMIDI + VMPK (Virtual MIDI Piano Keyboard).
 
 ## Autor
 Desenvolvido por Lucas Ramos Silva como parte do TCC do curso técnico em informatica no IFPB CG.
-Professor Orientador: Carlos Henrique Alencar
+Professor Orientador: Carlos Henrique Alencar Almeida
