@@ -59,3 +59,34 @@ add_test(NAME converter_tests COMMAND converter_tests)
 if(WIN32)
     set_target_properties(MIDI2Bridge PROPERTIES WIN32_EXECUTABLE ON)
 endif()
+
+# Ferramenta de teste e sintese sonora para validacao da modulacao UMP (Secao 4.2 do TCC)
+add_executable(ump_audio_sink
+    tools/ump_audio_sink.cpp
+    src/ump.h
+)
+target_include_directories(ump_audio_sink PRIVATE "src" "third_party")
+target_link_libraries(ump_audio_sink PRIVATE
+    Qt6::Core
+    rtmidi
+    pthread
+    dl
+    m
+)
+
+# Osciloscopio grafico de validacao da modulacao UMP em tempo real
+add_executable(ump_oscilloscope
+    tools/ump_oscilloscope_main.cpp
+    tools/oscilloscope.h
+    src/ump.h
+)
+target_include_directories(ump_oscilloscope PRIVATE "src" "tools" "third_party")
+target_link_libraries(ump_oscilloscope PRIVATE
+    Qt6::Widgets
+    Qt6::Core
+    Qt6::Gui
+    rtmidi
+    pthread
+    dl
+    m
+)

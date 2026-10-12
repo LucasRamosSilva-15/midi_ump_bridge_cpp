@@ -1,171 +1,212 @@
 # 🎹 Conversor e Analisador MIDI 1.0 para MIDI 2.0 (UMP) - Versão C++
-Bem-vindo à versão de alta performance do meu Trabalho de Conclusão de Curso (TCC) desenvolvido no Instituto Federal da Paraíba (IFPB).
 
-Originalmente concebido em Python, este projeto foi portado para C++17 utilizando o framework Qt6 para garantir menor latência no processamento de pacotes UMP (Universal MIDI Packet) e uma interface gráfica mais robusta.
+Bem-vindo à versão de alta performance do meu Trabalho de Conclusão de Curso (TCC) desenvolvido no **Instituto Federal da Paraíba (IFPB)** - Campus Campina Grande.
 
-Projeto em Python: https://github.com/LucasRamosSilva-15/midi-ump-bridge
+Originalmente concebido em Python, este projeto foi portado para **C++17** utilizando o framework **Qt6** para garantir latência ultra-baixa no processamento de pacotes **UMP (Universal MIDI Packet)**, uma interface gráfica robusta e uma bancada de validação acústica em tempo real com osciloscópio digital.
+
+> 🔗 **Projeto original em Python:** [github.com/LucasRamosSilva-15/midi-ump-bridge](https://github.com/LucasRamosSilva-15/midi-ump-bridge)
 
 ---
-## Demonstração em Vídeo
+
+## 🎥 Demonstração em Vídeo
 
 [Assista à demonstração no Google Drive](https://drive.google.com/file/d/1uy8M-NuNLCTuwC7DK9pBds0iCnk3s3lD/view?usp=sharing)
 
-
 ---
 
-## Sumário
+## 📑 Sumário
 
 - [Funcionalidades](#-funcionalidades)
 - [O que é MIDI?](#-o-que-é-midi)
 - [Sobre o Projeto](#-sobre-o-projeto)
 - [Tecnologias Utilizadas](#-tecnologias-utilizadas)
-- [Demonstração Visual](#-demonstracao-visual)
-- [Estrutura do Código (C++)](#-estrutura-do-codigo-c)
-- [Guia de Compilação e Execução (Windows)](#-guia-de-compilacao-e-execucao-windows)
-- [Guia de Compilação e Execução (Linux)](#-guia-de-compilacao-e-execucao-linux)
-- [Validação de Dados](#-validacao-de-dados)
+- [Ecossistema de Aplicações](#-ecossistema-de-aplicações)
+- [Demonstração Visual](#-demonstração-visual)
+- [Estrutura do Código](#-estrutura-do-código)
+- [Guia de Compilação e Execução (Linux)](#-guia-de-compilação-e-execução-linux)
+- [Guia de Compilação e Execução (Windows)](#-guia-de-compilação-e-execução-windows)
+- [Como Rodar a Bancada Completa de Testes](#-como-rodar-a-bancada-completa-de-testes)
+- [Validação e Comparação Acústica (Dual-Trace)](#-validação-e-comparação-acústica-dual-trace)
 - [Hardware de Teste](#-hardware-de-teste)
-- [Autor](#-autor)
+- [Autor e Orientação](#-autor-e-orientação)
 
 ---
 
-## Funcionalidades
+## 🚀 Funcionalidades
 
-- Captura mensagens de dispositivos MIDI 1.0 reais.
-- Converte Note On, Note Off, Control Change e Pitch Bend para mensagens MIDI 2.0 UMP.
-- Exibe os pacotes convertidos em uma interface Qt.
-- Mostra gráfico de Pitch Bend com resolução expandida.
-- Inclui teste integrado para validar o centro do Pitch Bend.
-
----
-
-## O que é MIDI?
-
-Se você não é da área de tecnologia musical, pode estar se perguntando o que exatamente esse sistema faz e por que ele precisa ser convertido. Uma boa regra para entender o MIDI (*Musical Instrument Digital Interface*) é: **MIDI não é áudio, é partitura digital.**
-
-Diferente de um arquivo MP3 ou WAV, que gravam a "onda sonora" real de uma música, o protocolo MIDI transmite apenas **instruções matemáticas**. Quando um músico aperta uma tecla em um teclado físico, em vez de enviar o som pronto para o computador, o teclado envia dados como:
-
-* **Qual nota foi tocada?** (que é indicado pela numeração da nota do teclado, como por exemplo, 51)
-* **Com que força a tecla foi pressionada?** (Velocity, que é a intensidade que aquela nota foi tocada)
-* **Quando ela foi solta?** 
-* **O músico usou alguma alavanca de efeito?** (Pitch Bend, que é usado para alterar a afinação (pitch) de uma nota de forma contínua e temporária)
-
-O computador (ou sintetizador) lê essas instruções e "toca" os instrumentos virtuais na hora.
-
+- **Captura em Tempo Real:** Escuta dispositivos e controladores MIDI 1.0 físicos e virtuais sem bloqueio de thread.
+- **Tradução UMP MT4:** Converte eventos legados de *Note On*, *Note Off*, *Control Change* e *Pitch Bend* para pacotes de 64 bits (*Message Type 4* - MIDI 2.0 Channel Voice).
+- **Expansão de Resolução Matemática:**
+  - *Velocity* escalonada de 7 bits ($[0, 127]$) para 16 bits ($[0, 65535]$) com saturação plena conforme as diretrizes oficiais da *MIDI Association*.
+  - *Pitch Bend* e *Control Change* projetados para resolução contínua de 32 bits ($[0, 4294967295]$).
+- **Interface Gráfica Analisadora (Qt6):** Exibição em tempo real do log de pacotes, canais, notas e palavras hexadecimais UMP.
+- **Osciloscópio Digital Acústico Integrado:** Sintetizador e osciloscópio gráfico de 60 FPS com modo comparativo **Dual-Trace (Canal Duplo)** para confrontar o som original de referência com o som modulado.
 
 ---
 
-## Sobre o Projeto
-Esta PoC (Prova de Conceito) foca na ponte tecnológica entre o protocolo MIDI 1.0 (8-bit/14-bit) e o novo MIDI 2.0 (32-bit/64-bit). O software captura bytes brutos de dispositivos MIDI reais, realiza o upscale da resolução matemática e encapsula o resultado no formato de pacotes de 64 bits (UMP Message Type 4).
+## 🎼 O que é MIDI?
+
+Se você não é da área de tecnologia musical, uma boa regra para entender o MIDI (*Musical Instrument Digital Interface*) é: **MIDI não é áudio, é partitura digital.**
+
+Diferente de um arquivo MP3 ou WAV (que gravam ondas sonoras prontas), o protocolo MIDI transmite **instruções de controle**:
+* **Qual nota foi tocada?** (identificador numérico da tecla, ex: 60 para o Dó Central);
+* **Com que força a tecla foi pressionada?** (*Velocity*, indicando a intensidade de execução);
+* **Quando a nota foi liberada?** (*Note Off*);
+* **Controles contínuos e modulação:** Alavanca de *Pitch Bend* (desvio de afinação) ou roda de modulação.
+
+O computador ou sintetizador recebe esses comandos e sintetiza o som instantaneamente.
 
 ---
 
-## Tecnologias Utilizadas
+## 🛠️ Sobre o Projeto
+
+Esta Prova de Conceito (PoC) atua como a ponte tecnológica entre o protocolo clássico MIDI 1.0 (de resolução restrita a 7/14 bits) e o novo padrão da indústria **MIDI 2.0 UMP** (palavras estruturadas de 32/64 bits). 
+
+O sistema elimina o histórico problema de *zipper noise* (ruído de degrau audível nas transições) e garante determinismo temporal estrito através de uma arquitetura multithread desacoplada em C++.
+
+---
+
+## 💻 Tecnologias Utilizadas
 
 - **Linguagem:** C++17
-- **Framework GUI:** Qt 6.11.0 (MSVC 2022) com módulo `Qt6::Svg` para ícones vetoriais.
-- **Design Visual:** Estilo Skeuomórfico técnico com ícones *Material Symbols*.
-- **Drivers MIDI:** RtMidi (Realtime MIDI I/O)
+- **Framework GUI:** Qt 6 (Módulos `Widgets`, `Core`, `Gui`, `Svg`)
+- **Drivers de Entrada/Saída MIDI:** [RtMidi 6.0.0](https://github.com/thestk/rtmidi) (com suporte nativo a ALSA no Linux e WinMM no Windows)
+- **Motor de Áudio e Síntese DSP:** [miniaudio](https://miniaud.io) (áudio analógico estéreo a 48.000 Hz sem dependências pesadas)
 - **Build System:** CMake 3.16+
-- **Padrão:** MIDI 2.0 / Universal MIDI Packet (UMP)
+- **Especificação:** Padrão oficial MIDI 2.0 / Universal MIDI Packet (UMP M2-104-UM)
 
 ---
 
-## Demonstração Visual
-Abaixo, a interface desenvolvida em Qt6 que monitora a entrada de notas e o gráfico de Pitch Bend em alta resolução.
+## 📦 Ecossistema de Aplicações
 
-![Interface principal monitorando mensagens MIDI](capturas/Captura4.png)
-![Gráfico de Pitch Bend em alta resolução](capturas/Captura3.png)
-![Osciloscópio capturando a mensagem MIDI 2.0](capturas/Captura5.png)
----
+O projeto compila três alvos executáveis complementares:
 
-## Estrutura do Código (C++)
-Diferente da versão Python, a arquitetura C++ separa as responsabilidades em classes e headers:
-
-src/ump.h: Estrutura de dados para mensagens de 64 bits e lógica de análise de bits.
-
-src/converter.cpp: Implementação da matemática de conversão (ex: upscale de Velocity para 16-bit).
-
-src/gui.cpp: Gerenciamento da janela principal e dos sinais de atualização da interface. O projeto conta com um forte polimento visual skeuomórfico para emular hardwares reais e ferramentas laboratoriais (veja `Design_skeuo.md`).
-
-resources.qrc: Arquivo de recursos do Qt que embarca a iconografia vetorial (SVG) nativamente no executável.
-
-src/main.cpp: Ponto de entrada que gerencia o console de seleção de portas e a inicialização do Qt.
+1. **`MIDI2Bridge`:** A aplicação principal. Contém a interface gráfica skeuomórfica, gerenciador de conexões seriais/USB e motor de conversão de pacotes UMP em tempo real.
+2. **`ump_oscilloscope`:** Ferramenta gráfica de laboratório que recebe os pacotes UMP via porta virtual, sintetiza o tom sonoro e exibe o osciloscópio digital em tempo real com modo comparativo *Dual-Trace*.
+3. **`ump_audio_sink`:** Receptor utilitário de console leve para bancadas de teste headless e validação acústica rápida.
 
 ---
 
-## Guia de Compilação e Execução (Windows)
-Para rodar este projeto, você precisará do Visual Studio 2022 (com C++), CMake e o Qt6 instalados.
+## 📸 Demonstração Visual
 
-1. Pré-requisitos
-- **Qt6:** Baixe via Qt Online Installer (Marque a opção MSVC 2022 64-bit).
-- **RtMidi:** A biblioteca é baixada e compilada automaticamente pelo CMake (FetchContent).
+Abaixo, a bancada experimental completa rodando em regime de concorrência: o controlador virtual (*VMPK*), a ponte (*MIDI2Bridge*) auditando os pacotes e o osciloscópio (*ump_oscilloscope*) comparando a onda de referência com a onda modulada:
 
-2. Compilando via Terminal
-Abra o terminal na pasta raiz do projeto e execute:
+![Interface principal monitorando mensagens MIDI](capturas/Captura6.png)
+![Gráfico de Pitch Bend em alta resolução](capturas/Captura7.png)
+![Osciloscópio capturando a mensagem MIDI 2.0](capturas/Captura8.png)
 
-### Criar pasta de build
-```bash
-mkdir build
-cd build
+---
+
+## 📁 Estrutura do Código
+
+```text
+midi_ump_bridge_cpp/
+├── src/
+│   ├── main.cpp              # Ponto de entrada do MIDI2Bridge
+│   ├── gui.h / gui.cpp       # Janela principal em Qt6 e telemetria
+│   ├── ump.h                 # Estrutura de dados UMP de 64 bits e análise binária
+│   └── converter.h / .cpp    # Algoritmo de bit-shifting e upscaling matemático
+├── tools/
+│   ├── ump_oscilloscope_main.cpp  # Interface e lógica do osciloscópio digital
+│   ├── oscilloscope.h             # Widget QPainter para renderização da grade/ondas
+│   └── ump_audio_sink.cpp         # Receptor de teste sonoro em linha de comando
+├── third_party/
+│   └── miniaudio.h           # Biblioteca de reprodução de áudio em tempo real
+├── tests/
+│   └── converter_tests.cpp   # Testes unitários do conversor UMP
+├── capturas/                 # Imagens e evidências para a monografia do TCC
+├── resources.qrc             # Recursos vetoriais e ícones SVG
+└── CMakeLists.txt            # Configuração e orquestração de compilação
 ```
-### Gerar arquivos do projeto
-```bash
-cmake ..
-```
-
-### Compilar o executável
-```bash
-cmake --build . --config Release
-```
-### Rodando
-O executável será gerado em build/Release/MIDI2Bridge.exe.
-
-Ao abrir, o terminal solicitará a escolha da porta MIDI. Após a seleção, a interface gráfica será carregada automaticamente.
 
 ---
-## Guia de Compilação e Execução (Linux)
-O processo no Linux (distribuições baseadas em Debian/Ubuntu) é nativo e simplificado, pois as bibliotecas são instaladas e resolvidas diretamente pelo sistema.
 
-1. Instalando Dependências
-Abra o terminal e instale os pacotes de compilação, o framework Qt6 (incluindo suporte a SVGs) e a biblioteca ALSA (necessária para o RtMidi gerenciar dispositivos de áudio):
+## 🐧 Guia de Compilação e Execução (Linux)
+
+Distros baseadas em Debian/Ubuntu/Fedora:
+
+### 1. Instalando Dependências
 ```bash
+# Ubuntu / Debian / Pop!_OS
 sudo apt update
 sudo apt install build-essential cmake qt6-base-dev libqt6svg6-dev libasound2-dev
+
+# Fedora
+sudo dnf install gcc-c++ cmake qt6-qtbase-devel qt6-qtsvg-devel alsa-lib-devel
 ```
 
-2. Compilando o Projeto
-Na pasta raiz do projeto, execute:
+### 2. Compilando Todos os Alvos
 ```bash
-mkdir build
-cd build
+mkdir -p build && cd build
 cmake ..
-cmake --build .
+make -j$(nproc)
 ```
 
-3. Executando (dentro da pasta build)
+---
+
+## 🪟 Guia de Compilação e Execução (Windows)
+
+Requer o **Visual Studio 2022** (com suporte a C++), **CMake** e **Qt6 (MSVC 2022 64-bit)**:
+
 ```bash
-./MIDI2Bridge
+mkdir build && cd build
+cmake ..
+cmake --build . --config Release
 ```
 
----
-## Validação de Dados
-O software inclui uma rotina de teste de unidade integrada. Ao iniciar, você pode optar por rodar o Teste de Pitch Bend.
-
-O que o teste valida?
-O padrão UMP exige que o centro do Pitch Bend (repouso) seja representado pelo valor hexadecimal 0x80000000 no Word 2 da mensagem. O teste injeta o valor MIDI 1.0 8192 (centro) e valida se a saída C++ atinge exatamente o bitmask esperado.
+Os binários serão gerados na pasta `build/Release/`.
 
 ---
 
-## Hardware de Teste
-Para garantir a precisão, o sistema foi homologado com:
+## 🔬 Como Rodar a Bancada Completa de Testes
 
-Teclado Físico: Yamaha PSR E383 (USB-MIDI).
+Para reproduzir o experimento de validação acústica do TCC:
 
-Virtualização: loopMIDI + VMPK (Virtual MIDI Piano Keyboard).
+1. **Abra o Osciloscópio Digital:**
+   ```bash
+   ./build/ump_oscilloscope
+   ```
+   *(Ele iniciará o subsistema de áudio e criará automaticamente a porta virtual `UMP Audio Sink Input`)*.
+
+2. **Abra a Ponte (`MIDI2Bridge`):**
+   ```bash
+   ./build/MIDI2Bridge
+   ```
+   - Em **Entrada MIDI**: Selecione o seu teclado físico ou o teclado virtual (*VMPK*);
+   - Em **Saída MIDI**: Selecione **`UMP Audio Sink Input`**;
+   - Clique em **Conectar / Iniciar**.
+
+3. **Toque e Valide:**
+   - Ao tocar as teclas, o áudio soará limpo nos fones/caixas de som e a onda senoidal se desenhará na tela do osciloscópio a 60 FPS.
+   - Pressione **Espaço** ou clique em **`[ 📌 Fixar Som Original ]`** para congelar a onda de referência (traço azul).
+   - Movimente o *Pitch Bend*: a onda verde se comprimirá ou expandirá em tempo real sobre a referência azul, exibindo o desvio em Hertz ($\Delta f$) e a variação do período temporal ($\Delta T$).
 
 ---
 
-## Autor
-Desenvolvido por Lucas Ramos Silva como parte do TCC do curso técnico em informatica no IFPB CG.
-Professor Orientador: Carlos Henrique Alencar
+## 🧪 Validação e Comparação Acústica (Dual-Trace)
+
+A bancada foi validada comparando o comportamento da forma de onda no domínio do tempo e da frequência:
+
+| Parâmetro de Análise | Som Original (Referência) | Som Modulado (Pitch Bend / Nota Ativa) |
+| :--- | :---: | :---: |
+| **Canal no Osciloscópio** | **CH1 (Azul Tracejado)** | **CH2 (Verde Contínuo)** |
+| **Frequência Fundamental** | $f_0$ estabilizada | $f(t)$ variando dinamicamente |
+| **Período da Onda** | $T_0 = rac{1}{f_0}$ | $T(t)$ comprimido ou alargado |
+| **Resolução de Controle** | 7 bits (MIDI 1.0) | 32 bits contínuos (MIDI 2.0 UMP) |
+| **Comportamento Dinâmico** | Estático de repouso | Transição contínua sem *zipper noise* |
+
+---
+
+## 🎹 Hardware de Teste
+
+- **Teclado Físico Homologado:** Yamaha PSR E383 (USB-MIDI).
+- **Controlador Virtual:** Virtual MIDI Piano Keyboard (VMPK).
+- **Roteamento Serial:** ALSA Virtual RawMIDI / virmidi (Linux) e loopMIDI (Windows).
+
+---
+
+## 👨‍💻 Autor e Orientação
+
+- **Autor:** Lucas Ramos Silva ([GitHub](https://github.com/LucasRamosSilva-15))
+- **Instituição:** Instituto Federal de Educação, Ciência e Tecnologia da Paraíba (IFPB) - Campus Campina Grande
+- **Orientador:** Prof. Carlos Henrique Alencar

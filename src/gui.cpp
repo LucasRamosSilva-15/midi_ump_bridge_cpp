@@ -40,8 +40,6 @@ void MidiWorker::run() {
       continue;
     }
 
-
-
     if (message.size() >= 2) {
       uint8_t status = message[0] & 0xF0;
       uint8_t channel = message[0] & 0x0F;
@@ -419,7 +417,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), worker(nullptr) {
   connect(btn_simular, &QPushButton::clicked, this,
           &MainWindow::simular_pitch_bend);
 
-  
   msg_count = 0;
   timer_taxa = new QTimer(this);
   connect(timer_taxa, &QTimer::timeout, this, [this]() {
@@ -465,7 +462,7 @@ void MainWindow::connect_selected_port_out() {
     status_label_out->setText("Status: Selecione uma saída MIDI antes de conectar.");
     return;
   }
-  
+
   bool worker_was_running = (worker && worker->isRunning());
   if (worker_was_running) {
       worker->requestInterruption();
@@ -473,7 +470,7 @@ void MainWindow::connect_selected_port_out() {
       delete worker;
       worker = nullptr;
   }
-  
+
   const unsigned int port_index = port_selector_out->currentData().toUInt();
   const QString port_name = port_selector_out->currentText();
 
@@ -503,7 +500,7 @@ void MainWindow::connect_selected_port_out() {
   btn_connect_out->setEnabled(false);
   btn_disconnect_out->setEnabled(true);
   status_label_out->setText(QString("Status: Conectado: %1").arg(port_name));
-  
+
   if (worker_was_running) {
       worker = new MidiWorker(midi_port.get(), midi_port_out.get(), this);
       connect(worker, &MidiWorker::log_signal, this, &MainWindow::add_table_row);
@@ -525,7 +522,7 @@ void MainWindow::disconnect_port_out() {
   btn_connect_out->setEnabled(port_selector_out->count() > 0);
   btn_disconnect_out->setEnabled(false);
   status_label_out->setText("Status: Saída MIDI desconectada.");
-  
+
   if (worker_was_running) {
       worker = new MidiWorker(midi_port.get(), midi_port_out.get(), this);
       connect(worker, &MidiWorker::log_signal, this, &MainWindow::add_table_row);
@@ -533,7 +530,6 @@ void MainWindow::disconnect_port_out() {
       worker->start();
   }
 }
-
 
 void MainWindow::refresh_ports() {
   port_selector->clear();
@@ -919,3 +915,4 @@ void MainWindow::apply_skeuo_theme() {
   )";
   setStyleSheet(qss);
 }
+

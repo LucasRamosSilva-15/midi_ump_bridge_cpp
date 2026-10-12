@@ -17,13 +17,13 @@ public:
     std::vector<unsigned char> toSysEx() const {
         std::vector<unsigned char> sysex;
         sysex.push_back(0xF0);
-        sysex.push_back(0x7D); // Educational/Research ID
-        
+        sysex.push_back(0x7D);
+
         uint64_t u64 = ump64();
         for (int i = 0; i < 10; ++i) {
             sysex.push_back(static_cast<unsigned char>((u64 >> (i * 7)) & 0x7F));
         }
-        
+
         sysex.push_back(0xF7);
         return sysex;
     }
@@ -31,17 +31,16 @@ public:
     static bool fromSysEx(const std::vector<unsigned char>& sysex, UMPMessage& out_msg) {
         if (sysex.size() < 13) return false;
         if (sysex[0] != 0xF0 || sysex[1] != 0x7D || sysex.back() != 0xF7) return false;
-        
+
         uint64_t u64 = 0;
         for (int i = 0; i < 10; ++i) {
             u64 |= (static_cast<uint64_t>(sysex[2 + i]) & 0x7F) << (i * 7);
         }
-        
+
         out_msg.word1 = static_cast<uint32_t>(u64 >> 32);
         out_msg.word2 = static_cast<uint32_t>(u64 & 0xFFFFFFFF);
         return true;
     }
-
 
     QMap<QString, QString> analyze() const {
         QMap<QString, QString> data;
@@ -58,25 +57,25 @@ public:
                 data["type"] = "Note On";
                 data["target"] = QString("Nota %1").arg((word1 >> 8) & 0xFF);
                 data["value"] = QString("Vel: %1").arg((word2 >> 16) & 0xFFFF);
-            } 
+            }
             else if (status == 0x8) {
                 data["type"] = "Note Off";
                 data["target"] = QString("Nota %1").arg((word1 >> 8) & 0xFF);
                 data["value"] = QString("Vel: %1").arg((word2 >> 16) & 0xFFFF);
-            } 
+            }
             else if (status == 0xB) {
                 uint8_t index = (word1 >> 8) & 0xFF;
                 data["type"] = "Control Change";
                 if (index == 64) data["target"] = "Sustain (64)";
                 else data["target"] = QString("CC %1").arg(index);
-                
+
                 data["value"] = QString("Val: %1").arg(word2);
             }
             else if (status == 0xE) {
                 data["type"] = "Pitch Bend";
                 data["target"] = "Roda de Pitch";
                 data["value"] = QString("Val: %1").arg(word2);
-            } 
+            }
             else {
                 data["type"] = QString("Status 0x%1").arg(status, 0, 16).toUpper();
                 data["target"] = "-";
