@@ -191,9 +191,21 @@ A bancada foi validada comparando o comportamento da forma de onda no domínio d
 | :--- | :---: | :---: |
 | **Canal no Osciloscópio** | **CH1 (Azul Tracejado)** | **CH2 (Verde Contínuo)** |
 | **Frequência Fundamental** | $f_0$ estabilizada | $f(t)$ variando dinamicamente |
-| **Período da Onda** | $T_0 = rac{1}{f_0}$ | $T(t)$ comprimido ou alargado |
+| **Período da Onda** | $T_0 = 1/f_0$ | $T(t)$ comprimido ou alargado |
 | **Resolução de Controle** | 7 bits (MIDI 1.0) | 32 bits contínuos (MIDI 2.0 UMP) |
 | **Comportamento Dinâmico** | Estático de repouso | Transição contínua sem *zipper noise* |
+
+---
+
+## 📊 Modelagem e Diagramas do Sistema
+
+### Diagrama de Atividade
+![Diagrama de Atividade](capturas/Diagrama_de_Atividade_Projeto_de_TCC.png)
+
+---
+
+### Diagrama de Classes
+![Diagrama de Classes](capturas/Midi_UMP_Bridge.png)
 
 ---
 
@@ -209,4 +221,4 @@ A bancada foi validada comparando o comportamento da forma de onda no domínio d
 
 - **Autor:** Lucas Ramos Silva ([GitHub](https://github.com/LucasRamosSilva-15))
 - **Instituição:** Instituto Federal de Educação, Ciência e Tecnologia da Paraíba (IFPB) - Campus Campina Grande
-- **Orientador:** Prof. Carlos Henrique Alencar
+- **Orientador:** Prof. Carlos Henrique Alencar Almeida
