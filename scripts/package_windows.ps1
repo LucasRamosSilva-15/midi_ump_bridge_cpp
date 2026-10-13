@@ -31,12 +31,18 @@ try {
     Set-Location "build"
 
     $cmakeArgs = @("-DCMAKE_BUILD_TYPE=Release")
-    if ($env:CMAKE_PREFIX_PATH) {
-        $cmakeArgs += "-DCMAKE_PREFIX_PATH=$env:CMAKE_PREFIX_PATH"
-        Write-Host "Usando CMAKE_PREFIX_PATH do ambiente: $env:CMAKE_PREFIX_PATH"
-    } elseif (Test-Path "C:\Qt\6.7.2\msvc2022_64") {
-        $cmakeArgs += "-DCMAKE_PREFIX_PATH=C:\Qt\6.7.2\msvc2022_64"
-        Write-Host "Usando CMAKE_PREFIX_PATH em C:\Qt\6.7.2\msvc2022_64"
+    $qtFound = $null
+    if ($env:CMAKE_PREFIX_PATH -and (Test-Path $env:CMAKE_PREFIX_PATH)) {
+        $qtFound = $env:CMAKE_PREFIX_PATH
+    } else {
+        $candidates = Get-ChildItem -Path "C:\Qt\*\msvc*" -Directory -ErrorAction SilentlyContinue
+        if ($candidates) {
+            $qtFound = $candidates[0].FullName
+        }
+    }
+    if ($qtFound) {
+        $cmakeArgs += "-DCMAKE_PREFIX_PATH=$qtFound"
+        Write-Host "Usando CMAKE_PREFIX_PATH: $qtFound"
     }
 
     Write-Host "Executando: cmake $cmakeArgs .."
@@ -80,8 +86,11 @@ try {
 
     Log-Step "3. Executando windeployqt para embutir DLLs do Qt6"
     $windeployqt = (Get-Command windeployqt.exe -ErrorAction SilentlyContinue).Source
-    if (-not $windeployqt -and (Test-Path "C:\Qt\6.7.2\msvc2022_64\bin\windeployqt.exe")) {
-        $windeployqt = "C:\Qt\6.7.2\msvc2022_64\bin\windeployqt.exe"
+    if (-not $windeployqt) {
+        $candidates = Get-ChildItem -Path "C:\Qt\*\msvc*\bin\windeployqt.exe" -File -ErrorAction SilentlyContinue
+        if ($candidates) {
+            $windeployqt = $candidates[0].FullName
+        }
     }
 
     if (-not $windeployqt) {

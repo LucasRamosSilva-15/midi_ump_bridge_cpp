@@ -58,15 +58,19 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install aqtinstall
-          Write-Host "Baixando Qt 6.7.2 oficial via aqtinstall..."
-          aqt install-qt -O C:\Qt windows desktop 6.7.2 win64_msvc2022_64
-          if (-not (Test-Path "C:\Qt\6.7.2\msvc2022_64\bin")) {
-              throw "Diretorio do Qt nao foi criado pelo aqtinstall!"
+          Write-Host "Baixando Qt 6.8.0 (MSVC 2022) via aqtinstall..."
+          aqt install-qt -O C:\Qt windows desktop 6.8.0 win64_msvc2022_64
+          $qtBinDirs = Get-ChildItem -Path "C:\Qt\*\msvc*\bin" -Directory
+          if (-not $qtBinDirs) {
+              throw "Falha: Nenhum diretorio bin do Qt foi encontrado em C:\Qt!"
           }
-          "C:\Qt\6.7.2\msvc2022_64\bin" | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
-          "CMAKE_PREFIX_PATH=C:\Qt\6.7.2\msvc2022_64" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
-          "QT_PLUGIN_PATH=C:\Qt\6.7.2\msvc2022_64\plugins" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
-          Write-Host "Qt 6.7.2 instalado e configurado com sucesso!" 
+          $qtBin = $qtBinDirs[0].FullName
+          $qtRoot = (Get-Item $qtBin).Parent.FullName
+          Write-Host "Qt detectado em: $qtRoot"
+          "$qtBin" | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
+          "CMAKE_PREFIX_PATH=$qtRoot" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          "QT_PLUGIN_PATH=$qtRoot\plugins" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          Write-Host "Variaveis de ambiente do Qt configuradas com sucesso!" 
 
       - name: Build and Package with PowerShell
         shell: pwsh
