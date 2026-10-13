@@ -69,10 +69,12 @@ target_include_directories(ump_audio_sink PRIVATE "src" "third_party")
 target_link_libraries(ump_audio_sink PRIVATE
     Qt6::Core
     rtmidi
-    pthread
-    dl
-    m
 )
+if(UNIX)
+    target_link_libraries(ump_audio_sink PRIVATE pthread dl m)
+elseif(WIN32)
+    target_link_libraries(ump_audio_sink PRIVATE winmm)
+endif()
 
 # Osciloscopio grafico de validacao da modulacao UMP em tempo real
 add_executable(ump_oscilloscope
@@ -86,7 +88,9 @@ target_link_libraries(ump_oscilloscope PRIVATE
     Qt6::Core
     Qt6::Gui
     rtmidi
-    pthread
-    dl
-    m
 )
+if(UNIX)
+    target_link_libraries(ump_oscilloscope PRIVATE pthread dl m)
+elseif(WIN32)
+    target_link_libraries(ump_oscilloscope PRIVATE winmm)
+endif()
