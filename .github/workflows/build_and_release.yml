@@ -58,7 +58,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install aqtinstall
-          aqt install-qt -O C:\Qt windows desktop 6.7.2 win64_msvc2022_64 -m qtsvg
+          aqt install-qt -O C:\Qt windows desktop 6.7.2 win64_msvc2022_64
           "C:\Qt\6.7.2\msvc2022_64\bin" | Out-File -FilePath $env:GITHUB_PATH -Append
           "CMAKE_PREFIX_PATH=C:\Qt\6.7.2\msvc2022_64" | Out-File -FilePath $env:GITHUB_ENV -Append
           "QT_PLUGIN_PATH=C:\Qt\6.7.2\msvc2022_64\plugins" | Out-File -FilePath $env:GITHUB_ENV -Append

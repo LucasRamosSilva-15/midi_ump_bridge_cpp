@@ -8,7 +8,13 @@ Write-Host "=== 1. Compilando alvos em modo Release (MSVC/CMake) ===" -Foregroun
 if (-not (Test-Path "build")) { New-Item -ItemType Directory -Path "build" | Out-Null }
 Set-Location "build"
 
-cmake -DCMAKE_BUILD_TYPE=Release ..
+if ($env:CMAKE_PREFIX_PATH) {
+    cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$env:CMAKE_PREFIX_PATH" ..
+} elseif (Test-Path "C:\\Qt\\6.7.2\\msvc2022_64") {
+    cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="C:\\Qt\\6.7.2\\msvc2022_64" ..
+} else {
+    cmake -DCMAKE_BUILD_TYPE=Release ..
+}
 cmake --build . --config Release --parallel
 
 Set-Location $RootDir
@@ -32,6 +38,9 @@ foreach ($bin in $Binaries) {
 
 Write-Host "=== 3. Executando windeployqt para coletar todas as DLLs do Qt6 ===" -ForegroundColor Cyan
 $windeployqt = (Get-Command windeployqt.exe -ErrorAction SilentlyContinue).Source
+if (-not $windeployqt -and (Test-Path "C:\\Qt\\6.7.2\\msvc2022_64\\bin\\windeployqt.exe")) {
+    $windeployqt = "C:\\Qt\\6.7.2\\msvc2022_64\\bin\\windeployqt.exe"
+}
 if (-not $windeployqt) {
     Write-Host "AVISO: windeployqt.exe nao encontrado no PATH." -ForegroundColor Yellow
     Write-Host "Certifique-se de executar este script dentro do terminal do Qt ou Developer Command Prompt do VS." -ForegroundColor Yellow
