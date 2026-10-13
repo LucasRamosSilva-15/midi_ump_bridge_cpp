@@ -192,7 +192,7 @@ A bancada foi validada comparando o comportamento da forma de onda no domínio d
 | **Canal no Osciloscópio** | **CH1 (Azul Tracejado)** | **CH2 (Verde Contínuo)** |
 | **Frequência Fundamental** | $f_0$ estabilizada | $f(t)$ variando dinamicamente |
 | **Período da Onda** | $T_0 = 1/f_0$ | $T(t)$ comprimido ou alargado |
-| **Resolução de Controle** | 7 bits (MIDI 1.0) | 32 bits contínuos (MIDI 2.0 UMP) |
+| **Resolução de Controle** | 7 bits e 14 bits (MIDI 1.0) | 32 bits contínuos (MIDI 2.0 UMP) |
 | **Comportamento Dinâmico** | Estático de repouso | Transição contínua sem *zipper noise* |
 
 ---
