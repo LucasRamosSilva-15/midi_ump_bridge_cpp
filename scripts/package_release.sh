@@ -1,4 +1,3 @@
-#!/usr/bin/env bash
 set -e
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -22,7 +21,6 @@ for b in build/MIDI2Bridge build/ump_oscilloscope build/ump_audio_sink; do
     fi
 done
 
-# Copia dependencias do Qt6 e sistema exceto glibc base
 python3 -c '
 import os, sys, shutil, subprocess
 
