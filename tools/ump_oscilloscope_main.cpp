@@ -39,6 +39,7 @@ struct SynthState {
     std::atomic<double> mod_depth{0.0};
     std::atomic<uint32_t> last_pitch32{0x80000000};
     std::atomic<uint16_t> last_vel16{0};
+    std::atomic<double> instant_freq{261.63};
 
     double phase{0.0};
     double lfo_phase{0.0};
@@ -70,16 +71,19 @@ void audio_callback(ma_device* pDevice, void* pOutput, const void* pInput, ma_ui
         if (g_synth.lfo_phase >= two_pi) g_synth.lfo_phase -= two_pi;
 
         double lfo_val = std::sin(g_synth.lfo_phase);
-        double mod_st = lfo_val * (g_synth.mod_depth.load() * 1.0);
+        double depth = g_synth.mod_depth.load();
+        double mod_st = lfo_val * (depth * 3.5);
 
         double total_st = pitch_st + mod_st;
         double effective_freq = base_f * std::pow(2.0, total_st / 12.0);
+        g_synth.instant_freq.store(effective_freq);
 
         double phase_inc = two_pi * effective_freq / sampleRate;
         g_synth.phase += phase_inc;
         if (g_synth.phase >= two_pi) g_synth.phase -= two_pi;
 
-        float sample = (float)(std::sin(g_synth.phase) * cur_amp);
+        double tremolo = 1.0 - (depth * 0.3 * (1.0 + lfo_val) * 0.5);
+        float sample = (float)(std::sin(g_synth.phase) * cur_amp * tremolo);
         pOut[i * 2 + 0] = sample;
         pOut[i * 2 + 1] = sample;
         monoSamples[i] = sample;
@@ -317,7 +321,7 @@ private slots:
 
         double eff_f = 0.0;
         if (active) {
-            eff_f = base_f * std::pow(2.0, pitch_st / 12.0);
+            eff_f = g_synth.instant_freq.load();
             lblFreqValue->setText(QString("%1 Hz").arg(eff_f, 6, 'f', 2));
             lblBaseFreq->setText(QString("Nota: %1 | Base: %2 Hz | Vel (16-bit): %3")
                                     .arg(note).arg(base_f, 0, 'f', 2).arg(vel16));
@@ -357,7 +361,8 @@ private slots:
         lblPitchHex->setText(QString("[0x%1]").arg(pitch32, 8, 16, QChar('0')).toUpper());
         barPitch->setValue((int)((pitch_st / 2.0) * 100));
 
-        lblMod->setText(QString("Mod Wheel (CC1): %1%").arg(mod_d * 100.0, 0, 'f', 1));
+        double st_wobble = mod_d * 3.5;
+        lblMod->setText(QString("Mod Wheel (CC1): %1% (±%2 st)").arg(mod_d * 100.0, 0, 'f', 1).arg(st_wobble, 0, 'f', 2));
         barMod->setValue((int)(mod_d * 100));
     }
 

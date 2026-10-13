@@ -27,9 +27,9 @@ public:
 
   void captureReference() {
     std::lock_guard<std::mutex> lock(buf_mutex);
-    size_t start = (write_idx + BUFFER_SIZE - VISIBLE_SAMPLES) % BUFFER_SIZE;
+    size_t trigger_start = findTriggerPoint();
     for (size_t i = 0; i < VISIBLE_SAMPLES; ++i) {
-      ref_buffer[i] = buffer[(start + i) % BUFFER_SIZE];
+      ref_buffer[i] = buffer[(trigger_start + i) % BUFFER_SIZE];
     }
     has_reference = true;
   }
@@ -42,6 +42,20 @@ public:
   bool isReferenceActive() const { return has_reference; }
 
 protected:
+  // Procura o cruzamento por zero ascendente (Zero-Crossing Trigger) para sincronizar a fase
+  size_t findTriggerPoint() {
+    size_t search_window = VISIBLE_SAMPLES * 2;
+    size_t start = (write_idx + BUFFER_SIZE - search_window) % BUFFER_SIZE;
+    for (size_t i = 0; i < search_window - VISIBLE_SAMPLES; ++i) {
+      size_t idx0 = (start + i) % BUFFER_SIZE;
+      size_t idx1 = (start + i + 1) % BUFFER_SIZE;
+      if (buffer[idx0] <= 0.0f && buffer[idx1] > 0.0f) {
+        return idx1;
+      }
+    }
+    return (write_idx + BUFFER_SIZE - VISIBLE_SAMPLES) % BUFFER_SIZE;
+  }
+
   void paintEvent(QPaintEvent *) override {
     QPainter p(this);
     p.setRenderHint(QPainter::Antialiasing);
@@ -73,9 +87,9 @@ protected:
 
     {
       std::lock_guard<std::mutex> lock(buf_mutex);
-      size_t start = (write_idx + BUFFER_SIZE - VISIBLE_SAMPLES) % BUFFER_SIZE;
+      size_t trigger_start = findTriggerPoint();
       for (size_t i = 0; i < VISIBLE_SAMPLES; ++i) {
-        liveData[i] = buffer[(start + i) % BUFFER_SIZE];
+        liveData[i] = buffer[(trigger_start + i) % BUFFER_SIZE];
       }
       if (has_reference) {
         refData = ref_buffer;
@@ -113,8 +127,7 @@ protected:
 
     p.setPen(QPen(QColor(0, 255, 170, 70), 6, Qt::SolidLine));
     p.drawPath(livePath);
-    p.setPen(QPen(QColor(0, 255, 170, 240), 2, Qt::SolidLine, Qt::RoundCap,
-                  Qt::RoundJoin));
+    p.setPen(QPen(QColor(0, 255, 170, 240), 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
     p.drawPath(livePath);
 
     p.setPen(QPen(QColor(40, 70, 80), 2));
@@ -127,19 +140,17 @@ protected:
       p.setPen(QColor(0, 255, 170));
       p.drawText(14, 38, "—— CH2 (VERDE CONTINUO): SOM MODULADO EM TEMPO REAL");
       p.setPen(QColor(224, 242, 241, 180));
-      p.drawText(w - 280, 22, "MODO: DUAL-TRACE COMPARATIVO");
+      p.drawText(w - 320, 22, "TRIGGER: AUTO ZERO-CROSS [LOCK]");
     } else {
       p.setPen(QColor(0, 255, 170, 200));
-      p.drawText(
-          14, 22,
-          "CH1: LIVE UMP AUDIO SINK  |  TIMEBASE: 500us/DIV  |  COUPLING: AC");
+      p.drawText(14, 22, "CH1: LIVE UMP AUDIO SINK  |  TIMEBASE: 500us/DIV  |  TRIGGER: ZERO-CROSS");
       p.setPen(QColor(128, 203, 196, 160));
       p.drawText(w - 330, 22, "DICA: Clique em [Fixar Referencia] p/ Comparar");
     }
   }
 
 private:
-  static const size_t BUFFER_SIZE = 4096;
+  static const size_t BUFFER_SIZE = 8192;
   static const size_t VISIBLE_SAMPLES = 800;
   std::vector<float> buffer;
   std::vector<float> ref_buffer;
