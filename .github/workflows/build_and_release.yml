@@ -70,7 +70,7 @@ jobs:
   create-release:
     name: Publish GitHub Release
     needs: [build-linux, build-windows]
-    if: startsWith(github.ref, "refs/tags/v")
+    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
