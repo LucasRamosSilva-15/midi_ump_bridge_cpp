@@ -1,5 +1,5 @@
 # Script de Empacotamento Portatil Standalone para Windows
-# TCC - MIDI 2.0 UMP Bridge v5.0.0
+# TCC - MIDI 2.0 UMP Bridge v5.1.0
 
 $ErrorActionPreference = "Stop"
 
@@ -61,7 +61,7 @@ try {
     Set-Location $RootDir
 
     Log-Step "2. Criando pasta de distribuicao Standalone"
-    $DistDir = Join-Path $RootDir "dist\MIDI2Bridge-v5.0.0-Windows-x64"
+    $DistDir = Join-Path $RootDir "dist\MIDI2Bridge-v5.1.0-Windows-x64"
     if (Test-Path $DistDir) { 
         Remove-Item -Recurse -Force $DistDir 
     }
@@ -109,7 +109,7 @@ try {
 
     $Readme = @"
 ===============================================================
-  MIDI 2.0 UMP Bridge - Versao 5.0.0 (Pacote Portatil Windows)
+  MIDI 2.0 UMP Bridge - Versao 5.1.0 (Pacote Portatil Windows)
 ===============================================================
 
 Este pacote contem todos os executaveis, DLLs do Qt6 e plugins
@@ -134,7 +134,7 @@ COMO EXECUTAR:
     if (-not (Test-Path $distParent)) { 
         New-Item -ItemType Directory -Path $distParent | Out-Null 
     }
-    $ZipOutput = Join-Path $distParent "MIDI2Bridge-v5.0.0-Windows-x64.zip"
+    $ZipOutput = Join-Path $distParent "MIDI2Bridge-v5.1.0-Windows-x64.zip"
     if (Test-Path $ZipOutput) { 
         Remove-Item -Force $ZipOutput 
     }

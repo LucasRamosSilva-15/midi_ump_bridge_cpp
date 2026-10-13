@@ -10,7 +10,7 @@ make -j$(nproc)
 cd "$DIR"
 
 echo "=== Empacotando Distribuição Portátil Standalone ==="
-DIST="dist/MIDI2Bridge-v5.0.0-Linux-x86_64"
+DIST="dist/MIDI2Bridge-v5.1.0-Linux-x86_64"
 rm -rf "$DIST"
 mkdir -p "$DIST/bin" "$DIST/lib" "$DIST/plugins"
 
@@ -24,7 +24,7 @@ done
 python3 -c '
 import os, sys, shutil, subprocess
 
-dist = "dist/MIDI2Bridge-v5.0.0-Linux-x86_64"
+dist = "dist/MIDI2Bridge-v5.1.0-Linux-x86_64"
 system_blacklist = {
     "linux-vdso.so.1", "libc.so.6", "libm.so.6", "libpthread.so.0", "libdl.so.2",
     "librt.so.1", "ld-linux-x86-64.so.2", "libresolv.so.2"
@@ -100,8 +100,8 @@ EOF
 chmod +x "$DIST"/*.sh
 
 echo "=== Compactando arquivos de Release ==="
-tar -czf dist/MIDI2Bridge-v5.0.0-Linux-x86_64.tar.gz -C dist MIDI2Bridge-v5.0.0-Linux-x86_64
-cd dist && zip -q -r MIDI2Bridge-v5.0.0-Linux-x86_64.zip MIDI2Bridge-v5.0.0-Linux-x86_64
+tar -czf dist/MIDI2Bridge-v5.1.0-Linux-x86_64.tar.gz -C dist MIDI2Bridge-v5.1.0-Linux-x86_64
+cd dist && zip -q -r MIDI2Bridge-v5.1.0-Linux-x86_64.zip MIDI2Bridge-v5.1.0-Linux-x86_64
 cd "$DIR"
 
-echo "=== Pacote Standalone v5.0.0 gerado com sucesso em dist/ ==="
+echo "=== Pacote Standalone v5.1.0 gerado com sucesso em dist/ ==="
