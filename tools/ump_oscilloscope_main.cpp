@@ -1,4 +1,8 @@
 
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+
 #include <QApplication>
 #include <QMainWindow>
 #include <QLabel>
@@ -334,10 +338,10 @@ protected:
             onClearReference();
         } else if (event->key() == Qt::Key_Up) {
             int cur = sliderMod->value();
-            sliderMod->setValue(std::min(100, cur + 5));
+            sliderMod->setValue((cur + 5 > 100) ? 100 : cur + 5);
         } else if (event->key() == Qt::Key_Down) {
             int cur = sliderMod->value();
-            sliderMod->setValue(std::max(0, cur - 5));
+            sliderMod->setValue((cur - 5 < 0) ? 0 : cur - 5);
         } else {
             QMainWindow::keyPressEvent(event);
         }
