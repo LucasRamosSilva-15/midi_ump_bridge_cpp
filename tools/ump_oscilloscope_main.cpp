@@ -3,6 +3,7 @@
 #include <QMainWindow>
 #include <QLabel>
 #include <QPushButton>
+#include <QSlider>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QGroupBox>
@@ -72,8 +73,9 @@ void audio_callback(ma_device* pDevice, void* pOutput, const void* pInput, ma_ui
 
         double lfo_val = std::sin(g_synth.lfo_phase);
         double depth = g_synth.mod_depth.load();
-        double mod_st = lfo_val * (depth * 3.5);
 
+        // 1. Modulação de Frequência LFO (Vibrato acústico ±2.5 semitons)
+        double mod_st = lfo_val * (depth * 2.5);
         double total_st = pitch_st + mod_st;
         double effective_freq = base_f * std::pow(2.0, total_st / 12.0);
         g_synth.instant_freq.store(effective_freq);
@@ -82,8 +84,15 @@ void audio_callback(ma_device* pDevice, void* pOutput, const void* pInput, ma_ui
         g_synth.phase += phase_inc;
         if (g_synth.phase >= two_pi) g_synth.phase -= two_pi;
 
-        double tremolo = 1.0 - (depth * 0.3 * (1.0 + lfo_val) * 0.5);
-        float sample = (float)(std::sin(g_synth.phase) * cur_amp * tremolo);
+        // 2. Modulação Harmônica de Fase / FM (Deformação visual da forma de onda para comparativo 4.3)
+        // Índice de modulação beta varia de 0 (senóide pura f0) até 1.8 (onda rica em harmônicos)
+        double beta = depth * 1.8;
+        double modulated_phase = g_synth.phase + beta * std::sin(g_synth.phase);
+
+        // 3. Modulação de Amplitude (Tremolo síncrono suave)
+        double tremolo = 1.0 - (depth * 0.25 * (1.0 + lfo_val) * 0.5);
+
+        float sample = (float)(std::sin(modulated_phase) * cur_amp * tremolo);
         pOut[i * 2 + 0] = sample;
         pOut[i * 2 + 1] = sample;
         monoSamples[i] = sample;
@@ -112,7 +121,10 @@ void midi_callback(double timeStamp, std::vector<unsigned char>* message, void* 
         if (status == 0x9) ump = create_midi2_note_on(d1, (d2 << 9) | (d2 << 2), ch);
         else if (status == 0x8) ump = create_midi2_note_off(d1, (d2 << 9) | (d2 << 2), ch);
         else if (status == 0xE) ump = create_midi2_pitch_bend(((d2 << 7) | d1) << 18, ch);
-        else if (status == 0xB) ump = create_midi2_control_change(d1, d2 << 25, ch);
+        else if (status == 0xB) {
+            uint32_t val32 = (uint32_t)((d2 / 127.0) * 0xFFFFFFFF);
+            ump = create_midi2_control_change(d1, val32, ch);
+        }
         is_ump = true;
     }
 
@@ -154,6 +166,34 @@ void midi_callback(double timeStamp, std::vector<unsigned char>* message, void* 
             if (index == 1) {
                 uint32_t val32 = ump.word2;
                 g_synth.mod_depth.store((double)val32 / 4294967295.0);
+            }
+        }
+    }
+    else if (mt == 2) {
+        if (status == 0x9) {
+            uint8_t vel7 = ump.word1 & 0x7F;
+            if (vel7 > 0) {
+                double f = 440.0 * std::pow(2.0, ((int)note_idx - 69.0) / 12.0);
+                g_synth.current_note.store(note_idx);
+                g_synth.target_freq.store(f);
+                g_synth.target_amp.store((double)vel7 / 127.0 * 0.4);
+                g_synth.note_active.store(true);
+            } else {
+                g_synth.target_amp.store(0.0);
+                g_synth.note_active.store(false);
+            }
+        }
+        else if (status == 0x8) {
+            if (g_synth.current_note.load() == note_idx) {
+                g_synth.target_amp.store(0.0);
+                g_synth.note_active.store(false);
+            }
+        }
+        else if (status == 0xB) {
+            uint8_t index = (ump.word1 >> 8) & 0xFF;
+            if (index == 1) {
+                uint8_t val7 = ump.word1 & 0x7F;
+                g_synth.mod_depth.store((double)val7 / 127.0);
             }
         }
     }
@@ -253,21 +293,29 @@ public:
 
         QHBoxLayout* hMod = new QHBoxLayout();
         lblMod = new QLabel("Mod Wheel (CC1): 0.0%", this);
-        lblLfo = new QLabel("LFO: 5.5 Hz", this);
+        lblLfo = new QLabel("LFO: 5.5 Hz | FM β: 0.0", this);
         lblLfo->setStyleSheet("color: #80cbc4;");
         hMod->addWidget(lblMod);
         hMod->addStretch();
         hMod->addWidget(lblLfo);
 
-        barMod = new QProgressBar(this);
-        barMod->setRange(0, 100);
-        barMod->setValue(0);
-        barMod->setFixedHeight(10);
+        sliderMod = new QSlider(Qt::Horizontal, this);
+        sliderMod->setRange(0, 100);
+        sliderMod->setValue(0);
+        sliderMod->setToolTip("Controle CC1 (Modulation Wheel) - Ajustável via Mouse, Teclado (Setas Cima/Baixo) ou MIDI");
+        sliderMod->setStyleSheet(
+            "QSlider::groove:horizontal { height: 8px; background: #050b0e; border: 1px solid #004d40; border-radius: 4px; }"
+            "QSlider::sub-page:horizontal { background: #00e5ff; border-radius: 4px; }"
+            "QSlider::handle:horizontal { background: #00ffaa; border: 1px solid #004d40; width: 16px; margin-top: -4px; margin-bottom: -4px; border-radius: 8px; }"
+        );
+        connect(sliderMod, &QSlider::valueChanged, this, [](int val) {
+            g_synth.mod_depth.store(val / 100.0);
+        });
 
         vMod->addLayout(hPb);
         vMod->addWidget(barPitch);
         vMod->addLayout(hMod);
-        vMod->addWidget(barMod);
+        vMod->addWidget(sliderMod);
         panelLayout->addWidget(grpMod, 1);
 
         mainLayout->addLayout(panelLayout);
@@ -282,6 +330,14 @@ protected:
     void keyPressEvent(QKeyEvent *event) override {
         if (event->key() == Qt::Key_Space) {
             onCaptureReference();
+        } else if (event->key() == Qt::Key_C) {
+            onClearReference();
+        } else if (event->key() == Qt::Key_Up) {
+            int cur = sliderMod->value();
+            sliderMod->setValue(std::min(100, cur + 5));
+        } else if (event->key() == Qt::Key_Down) {
+            int cur = sliderMod->value();
+            sliderMod->setValue(std::max(0, cur - 5));
         } else {
             QMainWindow::keyPressEvent(event);
         }
@@ -361,9 +417,15 @@ private slots:
         lblPitchHex->setText(QString("[0x%1]").arg(pitch32, 8, 16, QChar('0')).toUpper());
         barPitch->setValue((int)((pitch_st / 2.0) * 100));
 
-        double st_wobble = mod_d * 3.5;
+        double st_wobble = mod_d * 2.5;
+        double beta = mod_d * 1.8;
         lblMod->setText(QString("Mod Wheel (CC1): %1% (±%2 st)").arg(mod_d * 100.0, 0, 'f', 1).arg(st_wobble, 0, 'f', 2));
-        barMod->setValue((int)(mod_d * 100));
+        lblLfo->setText(QString("LFO: 5.5 Hz | FM β: %1").arg(beta, 0, 'f', 2));
+        if (!sliderMod->isSliderDown()) {
+            sliderMod->blockSignals(true);
+            sliderMod->setValue((int)(mod_d * 100));
+            sliderMod->blockSignals(false);
+        }
     }
 
 private:
@@ -383,7 +445,7 @@ private:
     QLabel* lblDeltaFreq;
     QLabel* lblDeltaPeriod;
     QProgressBar* barPitch;
-    QProgressBar* barMod;
+    QSlider* sliderMod;
     QPushButton* btnFreezeRef;
     QPushButton* btnClearRef;
 };

@@ -58,8 +58,9 @@ void audio_callback(ma_device* pDevice, void* pOutput, const void* pInput, ma_ui
         if (g_synth.lfo_phase >= two_pi) g_synth.lfo_phase -= two_pi;
 
         double lfo_val = std::sin(g_synth.lfo_phase);
-        double mod_st = lfo_val * (g_synth.mod_depth.load() * 1.0);
+        double depth = g_synth.mod_depth.load();
 
+        double mod_st = lfo_val * (depth * 2.5);
         double total_st = pitch_st + mod_st;
         double effective_freq = base_f * std::pow(2.0, total_st / 12.0);
 
@@ -67,7 +68,11 @@ void audio_callback(ma_device* pDevice, void* pOutput, const void* pInput, ma_ui
         g_synth.phase += phase_inc;
         if (g_synth.phase >= two_pi) g_synth.phase -= two_pi;
 
-        float sample = (float)(std::sin(g_synth.phase) * cur_amp);
+        double beta = depth * 1.8;
+        double modulated_phase = g_synth.phase + beta * std::sin(g_synth.phase);
+        double tremolo = 1.0 - (depth * 0.25 * (1.0 + lfo_val) * 0.5);
+
+        float sample = (float)(std::sin(modulated_phase) * cur_amp * tremolo);
         pOut[i * 2 + 0] = sample;
         pOut[i * 2 + 1] = sample;
     }
