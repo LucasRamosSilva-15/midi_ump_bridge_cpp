@@ -55,33 +55,44 @@ static WaveformDisplay* g_display = nullptr;
 
 void audio_callback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount) {
     (void)pInput;
+    if (!pOutput || frameCount == 0) return;
     float* pOut = (float*)pOutput;
     double sampleRate = (double)pDevice->sampleRate;
+    if (sampleRate <= 0.0) sampleRate = 48000.0;
     const double two_pi = 2.0 * M_PI;
     const double lfo_freq = 5.5;
     const double lfo_inc = two_pi * lfo_freq / sampleRate;
 
-    std::vector<float> monoSamples(frameCount);
+    std::vector<float> monoSamples(frameCount, 0.0f);
 
     for (ma_uint32 i = 0; i < frameCount; ++i) {
         double cur_amp = g_synth.amplitude.load();
         double tgt_amp = g_synth.target_amp.load();
+        if (std::isnan(cur_amp)) cur_amp = 0.0;
+        if (std::isnan(tgt_amp)) tgt_amp = 0.0;
         cur_amp += (tgt_amp - cur_amp) * 0.005;
         g_synth.amplitude.store(cur_amp);
 
         double base_f = g_synth.target_freq.load();
+        if (base_f <= 0.0 || std::isnan(base_f) || std::isinf(base_f)) base_f = 261.63;
+
         double pitch_st = g_synth.pitch_offset_semitones.load();
+        if (std::isnan(pitch_st) || std::isinf(pitch_st)) pitch_st = 0.0;
 
         g_synth.lfo_phase += lfo_inc;
         if (g_synth.lfo_phase >= two_pi) g_synth.lfo_phase -= two_pi;
 
         double lfo_val = std::sin(g_synth.lfo_phase);
         double depth = g_synth.mod_depth.load();
+        if (depth < 0.0 || std::isnan(depth)) depth = 0.0;
+        else if (depth > 1.0) depth = 1.0;
 
         // 1. Modulação de Frequência LFO (Vibrato acústico ±2.5 semitons)
         double mod_st = lfo_val * (depth * 2.5);
         double total_st = pitch_st + mod_st;
         double effective_freq = base_f * std::pow(2.0, total_st / 12.0);
+        if (effective_freq < 10.0 || std::isnan(effective_freq)) effective_freq = 10.0;
+        if (effective_freq > sampleRate * 0.45) effective_freq = sampleRate * 0.45;
         g_synth.instant_freq.store(effective_freq);
 
         double phase_inc = two_pi * effective_freq / sampleRate;
@@ -89,7 +100,6 @@ void audio_callback(ma_device* pDevice, void* pOutput, const void* pInput, ma_ui
         if (g_synth.phase >= two_pi) g_synth.phase -= two_pi;
 
         // 2. Modulação Harmônica de Fase / FM (Deformação visual da forma de onda para comparativo 4.3)
-        // Índice de modulação beta varia de 0 (senóide pura f0) até 1.8 (onda rica em harmônicos)
         double beta = depth * 1.8;
         double modulated_phase = g_synth.phase + beta * std::sin(g_synth.phase);
 
@@ -97,6 +107,10 @@ void audio_callback(ma_device* pDevice, void* pOutput, const void* pInput, ma_ui
         double tremolo = 1.0 - (depth * 0.25 * (1.0 + lfo_val) * 0.5);
 
         float sample = (float)(std::sin(modulated_phase) * cur_amp * tremolo);
+        if (std::isnan(sample) || std::isinf(sample)) sample = 0.0f;
+        else if (sample > 1.0f) sample = 1.0f;
+        else if (sample < -1.0f) sample = -1.0f;
+
         pOut[i * 2 + 0] = sample;
         pOut[i * 2 + 1] = sample;
         monoSamples[i] = sample;
@@ -205,8 +219,8 @@ void midi_callback(double timeStamp, std::vector<unsigned char>* message, void* 
 
 class OscilloscopeWindow : public QMainWindow {
 public:
-    OscilloscopeWindow(RtMidiIn* midi, QWidget *parent = nullptr)
-        : QMainWindow(parent), m_midi(midi), m_refFreq(0.0)
+    OscilloscopeWindow(RtMidiIn* midi, bool portOpened, const QString& portName, QWidget *parent = nullptr)
+        : QMainWindow(parent), m_midi(midi), m_portOpened(portOpened), m_portName(portName), m_refFreq(0.0)
     {
         setWindowTitle("UMP Audio Oscilloscope - Comparativo Som Original vs Modulado (TCC 4.3)");
         resize(920, 680);
@@ -228,8 +242,14 @@ public:
         mainLayout->setSpacing(12);
 
         QHBoxLayout* headerLayout = new QHBoxLayout();
-        lblStatus = new QLabel("● CONECTADO: UMP Audio Sink Input", this);
-        lblStatus->setStyleSheet("font-size: 13px; font-weight: bold; color: #00ffaa;");
+        lblStatus = new QLabel(this);
+        if (m_portOpened) {
+            lblStatus->setText(QString("● CONECTADO: %1").arg(m_portName));
+            lblStatus->setStyleSheet("font-size: 13px; font-weight: bold; color: #00ffaa;");
+        } else {
+            lblStatus->setText("○ AGUARDANDO ENTRADA MIDI (PROCURANDO PORTAS...)");
+            lblStatus->setStyleSheet("font-size: 13px; font-weight: bold; color: #f59e0b;");
+        }
 
         btnFreezeRef = new QPushButton("📌 Fixar Som Original (Referência)", this);
         btnFreezeRef->setToolTip("Congela a onda do som original como linha azul para comparacao direta com o som modulado");
@@ -330,6 +350,10 @@ public:
         timer->start(16);
     }
 
+    ~OscilloscopeWindow() override {
+        g_display = nullptr;
+    }
+
 protected:
     void keyPressEvent(QKeyEvent *event) override {
         if (event->key() == Qt::Key_Space) {
@@ -352,7 +376,7 @@ private slots:
         if (g_synth.note_active.load()) {
             m_scope->captureReference();
             m_refFreq = g_synth.target_freq.load();
-            double refT = (m_refFreq > 0) ? (1000.0 / m_refFreq) : 0.0;
+            double refT = (m_refFreq > 0.0) ? (1000.0 / m_refFreq) : 0.0;
             lblRefFreqText->setText(QString("Ref. Original (f₀): %1 Hz (T₀ = %2 ms)")
                                       .arg(m_refFreq, 0, 'f', 2).arg(refT, 0, 'f', 3));
             lblRefFreqText->setStyleSheet("color: #38bdf8; font-weight: bold;");
@@ -370,6 +394,21 @@ private slots:
 
     void updateTelemetry() {
         m_scope->update();
+
+        // Auto-reconexão inteligente se a porta não estava aberta no início
+        if (!m_portOpened && m_midi) {
+            try {
+                if (m_midi->getPortCount() > 0) {
+                    m_midi->openPort(0);
+                    m_portOpened = true;
+                    m_portName = QString::fromStdString(m_midi->getPortName(0));
+                    m_midi->setCallback(&midi_callback);
+                    m_midi->ignoreTypes(false, false, false);
+                    lblStatus->setText(QString("● CONECTADO: %1").arg(m_portName));
+                    lblStatus->setStyleSheet("font-size: 13px; font-weight: bold; color: #00ffaa;");
+                }
+            } catch (...) {}
+        }
 
         bool active = g_synth.note_active.load();
         double base_f = g_synth.target_freq.load();
@@ -393,10 +432,10 @@ private slots:
             lblNote->setStyleSheet("font-size: 13px; font-weight: bold; color: #80cbc4;");
         }
 
-        if (m_refFreq > 0.0 && active) {
+        if (m_refFreq > 0.001 && active) {
             double delta_f = eff_f - m_refFreq;
             double pct = (delta_f / m_refFreq) * 100.0;
-            double cur_T = (eff_f > 0) ? (1000.0 / eff_f) : 0.0;
+            double cur_T = (eff_f > 0.0) ? (1000.0 / eff_f) : 0.0;
             double ref_T = (1000.0 / m_refFreq);
             double delta_T = cur_T - ref_T;
 
@@ -434,6 +473,8 @@ private slots:
 
 private:
     RtMidiIn* m_midi;
+    bool m_portOpened;
+    QString m_portName;
     WaveformDisplay* m_scope;
     double m_refFreq;
 
@@ -464,28 +505,63 @@ int main(int argc, char *argv[]) {
     config.dataCallback      = audio_callback;
 
     ma_device device;
-    if (ma_device_init(nullptr, &config, &device) != MA_SUCCESS) {
-        std::cerr << "Falha ao iniciar audio.\n";
-        return 1;
+    bool audio_ok = (ma_device_init(nullptr, &config, &device) == MA_SUCCESS);
+    if (audio_ok) {
+        ma_device_start(&device);
+    } else {
+        std::cerr << "[AVISO] Falha ao iniciar dispositivo de áudio playback.\n";
     }
-    ma_device_start(&device);
 
-    RtMidiIn* midiIn = new RtMidiIn();
+    RtMidiIn* midiIn = nullptr;
     try {
-        midiIn->openVirtualPort("UMP Audio Sink Input");
-    } catch (...) {
-        if (midiIn->getPortCount() > 0) midiIn->openPort(0);
+        midiIn = new RtMidiIn();
+    } catch (const std::exception& e) {
+        std::cerr << "[AVISO] Falha ao criar RtMidiIn: " << e.what() << "\n";
     }
-    midiIn->setCallback(&midi_callback);
-    midiIn->ignoreTypes(false, false, false);
 
-    OscilloscopeWindow win(midiIn);
+    bool portOpened = false;
+    QString portName = "Nenhuma porta";
+
+    if (midiIn) {
+        try {
+            midiIn->openVirtualPort("UMP Audio Sink Input");
+            portOpened = true;
+            portName = "UMP Audio Sink Input (Virtual)";
+        } catch (...) {
+            try {
+                if (midiIn->getPortCount() > 0) {
+                    midiIn->openPort(0);
+                    portOpened = true;
+                    portName = QString::fromStdString(midiIn->getPortName(0));
+                }
+            } catch (...) {}
+        }
+
+        if (portOpened) {
+            try {
+                midiIn->setCallback(&midi_callback);
+                midiIn->ignoreTypes(false, false, false);
+            } catch (...) {}
+        }
+    }
+
+    OscilloscopeWindow win(midiIn, portOpened, portName);
     win.show();
 
     int ret = app.exec();
 
-    delete midiIn;
-    ma_device_stop(&device);
-    ma_device_uninit(&device);
+    if (midiIn) {
+        try {
+            midiIn->cancelCallback();
+            midiIn->closePort();
+        } catch (...) {}
+        delete midiIn;
+    }
+
+    if (audio_ok) {
+        ma_device_stop(&device);
+        ma_device_uninit(&device);
+    }
+
     return ret;
 }

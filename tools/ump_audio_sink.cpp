@@ -1,3 +1,7 @@
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+
 #include <iostream>
 #include <iomanip>
 #include <cmath>
@@ -39,8 +43,10 @@ void signal_handler(int) {
 
 void audio_callback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount) {
     (void)pInput;
+    if (!pOutput || frameCount == 0) return;
     float* pOut = (float*)pOutput;
     double sampleRate = (double)pDevice->sampleRate;
+    if (sampleRate <= 0.0) sampleRate = 48000.0;
     const double two_pi = 2.0 * M_PI;
     const double lfo_freq = 5.5;
     const double lfo_inc = two_pi * lfo_freq / sampleRate;
@@ -48,21 +54,30 @@ void audio_callback(ma_device* pDevice, void* pOutput, const void* pInput, ma_ui
     for (ma_uint32 i = 0; i < frameCount; ++i) {
         double cur_amp = g_synth.amplitude.load();
         double tgt_amp = g_synth.target_amp.load();
+        if (std::isnan(cur_amp)) cur_amp = 0.0;
+        if (std::isnan(tgt_amp)) tgt_amp = 0.0;
         cur_amp += (tgt_amp - cur_amp) * 0.005;
         g_synth.amplitude.store(cur_amp);
 
         double base_f = g_synth.target_freq.load();
+        if (base_f <= 0.0 || std::isnan(base_f) || std::isinf(base_f)) base_f = 261.63;
+
         double pitch_st = g_synth.pitch_offset_semitones.load();
+        if (std::isnan(pitch_st) || std::isinf(pitch_st)) pitch_st = 0.0;
 
         g_synth.lfo_phase += lfo_inc;
         if (g_synth.lfo_phase >= two_pi) g_synth.lfo_phase -= two_pi;
 
         double lfo_val = std::sin(g_synth.lfo_phase);
         double depth = g_synth.mod_depth.load();
+        if (depth < 0.0 || std::isnan(depth)) depth = 0.0;
+        else if (depth > 1.0) depth = 1.0;
 
         double mod_st = lfo_val * (depth * 2.5);
         double total_st = pitch_st + mod_st;
         double effective_freq = base_f * std::pow(2.0, total_st / 12.0);
+        if (effective_freq < 10.0 || std::isnan(effective_freq)) effective_freq = 10.0;
+        if (effective_freq > sampleRate * 0.45) effective_freq = sampleRate * 0.45;
 
         double phase_inc = two_pi * effective_freq / sampleRate;
         g_synth.phase += phase_inc;
@@ -73,6 +88,10 @@ void audio_callback(ma_device* pDevice, void* pOutput, const void* pInput, ma_ui
         double tremolo = 1.0 - (depth * 0.25 * (1.0 + lfo_val) * 0.5);
 
         float sample = (float)(std::sin(modulated_phase) * cur_amp * tremolo);
+        if (std::isnan(sample) || std::isinf(sample)) sample = 0.0f;
+        else if (sample > 1.0f) sample = 1.0f;
+        else if (sample < -1.0f) sample = -1.0f;
+
         pOut[i * 2 + 0] = sample;
         pOut[i * 2 + 1] = sample;
     }

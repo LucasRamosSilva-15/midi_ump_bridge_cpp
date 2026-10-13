@@ -19,6 +19,10 @@ MidiWorker::~MidiWorker() {
 void MidiWorker::run() {
   std::vector<unsigned char> message;
   while (!isInterruptionRequested()) {
+    if (!m_port || !m_port->isPortOpen()) {
+      QThread::msleep(20);
+      continue;
+    }
     try {
       m_port->getMessage(&message);
     } catch (RtMidiError &error) {
@@ -78,7 +82,7 @@ void MidiWorker::run() {
       }
 
       if (has_ump) {
-        if (m_out_port) {
+        if (m_out_port && m_out_port->isPortOpen()) {
             std::vector<unsigned char> sysex = ump_msg.toSysEx();
             try {
                 m_out_port->sendMessage(&sysex);

@@ -18,9 +18,14 @@ public:
   }
 
   void pushSamples(const float *samples, size_t count) {
+    if (!samples || count == 0) return;
     std::lock_guard<std::mutex> lock(buf_mutex);
     for (size_t i = 0; i < count; ++i) {
-      buffer[write_idx] = samples[i];
+      float s = samples[i];
+      if (std::isnan(s) || std::isinf(s)) s = 0.0f;
+      else if (s > 1.0f) s = 1.0f;
+      else if (s < -1.0f) s = -1.0f;
+      buffer[write_idx] = s;
       write_idx = (write_idx + 1) % BUFFER_SIZE;
     }
   }
@@ -45,6 +50,7 @@ protected:
   // Procura o cruzamento por zero ascendente (Zero-Crossing Trigger) para sincronizar a fase
   size_t findTriggerPoint() {
     size_t search_window = VISIBLE_SAMPLES * 2;
+    if (search_window >= BUFFER_SIZE) search_window = BUFFER_SIZE - 1;
     size_t start = (write_idx + BUFFER_SIZE - search_window) % BUFFER_SIZE;
     for (size_t i = 0; i < search_window - VISIBLE_SAMPLES; ++i) {
       size_t idx0 = (start + i) % BUFFER_SIZE;
@@ -62,6 +68,7 @@ protected:
 
     int w = width();
     int h = height();
+    if (w <= 0 || h <= 0) return;
     int cy = h / 2;
 
     p.fillRect(rect(), QColor(10, 16, 20));
@@ -81,8 +88,8 @@ protected:
     p.setPen(QPen(QColor(35, 75, 80), 1, Qt::SolidLine));
     p.drawLine(0, cy, w, cy);
 
-    std::vector<float> liveData(VISIBLE_SAMPLES);
-    std::vector<float> refData(VISIBLE_SAMPLES);
+    std::vector<float> liveData(VISIBLE_SAMPLES, 0.0f);
+    std::vector<float> refData(VISIBLE_SAMPLES, 0.0f);
     bool showRef = false;
 
     {
@@ -103,7 +110,9 @@ protected:
       QPainterPath refPath;
       for (size_t i = 0; i < VISIBLE_SAMPLES; ++i) {
         float x = (float)i / (VISIBLE_SAMPLES - 1) * w;
-        float y = cy - (refData[i] * scaleY);
+        float v = refData[i];
+        if (std::isnan(v) || std::isinf(v)) v = 0.0f;
+        float y = cy - (v * scaleY);
         if (i == 0)
           refPath.moveTo(x, y);
         else
@@ -118,7 +127,9 @@ protected:
     QPainterPath livePath;
     for (size_t i = 0; i < VISIBLE_SAMPLES; ++i) {
       float x = (float)i / (VISIBLE_SAMPLES - 1) * w;
-      float y = cy - (liveData[i] * scaleY);
+      float v = liveData[i];
+      if (std::isnan(v) || std::isinf(v)) v = 0.0f;
+      float y = cy - (v * scaleY);
       if (i == 0)
         livePath.moveTo(x, y);
       else
