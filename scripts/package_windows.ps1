@@ -1,5 +1,3 @@
-# Script de Empacotamento Portatil Standalone para Windows
-# TCC - MIDI 2.0 UMP Bridge v5.0.0
 
 $ErrorActionPreference = "Stop"
 
@@ -20,9 +18,7 @@ $DistDir = "dist\MIDI2Bridge-v5.0.0-Windows-x64"
 if (Test-Path $DistDir) { Remove-Item -Recurse -Force $DistDir }
 New-Item -ItemType Directory -Path $DistDir | Out-Null
 
-# Copiar executaveis
 $Binaries = @("build\Release\MIDI2Bridge.exe", "build\Release\ump_oscilloscope.exe", "build\Release\ump_audio_sink.exe")
-# Se cmake gerou diretamente na pasta build sem subpasta Release
 if (-not (Test-Path $Binaries[0])) {
     $Binaries = @("build\MIDI2Bridge.exe", "build\ump_oscilloscope.exe", "build\ump_audio_sink.exe")
 }
@@ -45,7 +41,6 @@ if (-not $windeployqt) {
     Write-Host "DLLs do Qt6 e plugins embutidos com sucesso!" -ForegroundColor Green
 }
 
-# Criar LEIA-ME
 $Readme = @"
 ===============================================================
   MIDI 2.0 UMP Bridge - Versao 5.0.0 (Pacote Portatil Windows)
