@@ -180,10 +180,17 @@ Para reproduzir o experimento de validação acústica do TCC:
    - Clique em **Conectar / Iniciar**.
 
 3. **Toque e Valide:**
-   - Ao tocar as teclas, o som é sintetizado e a onda senoidal pura é desenhada a 60 FPS com sincronização de fase.
+   - Ao tocar as teclas, o som é sintetizado e a onda é desenhada a 60 FPS com sincronização de fase via *Zero-Crossing Trigger*.
    - Pressione **Espaço** ou clique em **`[ 📌 Fixar Som Original ]`** para congelar a onda de referência (traço tracejado azul).
    - Movimente a alavanca de **Pitch Bend** ou ajuste a **Modulação CC1** (pelo slider na tela, setas do teclado ou no controlador MIDI).
    - A onda verde se deforma e modula em tempo real sobre a referência azul, exibindo o desvio em Hertz ($\Delta f$), a variação do período temporal ($\Delta T$) e o índice harmônico FM ($\beta$).
+
+4. **Demonstração Acadêmica de Ruído de Zíper (*Zipper Noise*):**
+   - O osciloscópio possui um **Cockpit de Demonstração MIDI 2.0 vs MIDI 1.0** na parte inferior:
+     - **Nota de Teste Integrada (`Tecla T`):** Permite disparar o tom C4 (261.63 Hz) de forma autônoma, sem necessidade de teclado físico ou VMPK.
+     - **Seletor de Modo A/B (`Teclas 1 e 2`):** Alterna instantaneamente entre a quantização de **7 bits (128 degraus)** do MIDI 1.0 e a resolução contínua de **32 bits (4.294.967.296 degraus)** do MIDI 2.0 UMP.
+     - **Controles em 32-bit:** Sliders dedicados para Modulação CC1, Filtro Passa-Baixas CC74 (comportamento clássico de filtro ressonante) e Pitch Bend.
+     - **Varredura Automática A/B (`Tecla S`):** Inicia um *sweep* contínuo do filtro e da modulação; ao comutar entre os modos MIDI 1.0 e 2.0, a banca avaliadora ouve e enxerga imediatamente o desaparecimento do ruído de zíper (*zipper noise*), comprovando matematicamente e acusticamente o ganho de fidelidade do protocolo MIDI 2.0.
 
 ---
 
