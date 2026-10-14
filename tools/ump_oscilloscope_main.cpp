@@ -376,8 +376,8 @@ public:
 
         // Linha 1: Seletor de Modo e Badge de Resolução
         QHBoxLayout* hModeSelect = new QHBoxLayout();
-        rbMidi2 = new QRadioButton("🟢 Modo MIDI 2.0 UMP (32-bit / Resolução Contínua - 4.29B Passos)", this);
-        rbMidi1 = new QRadioButton("🔴 Modo MIDI 1.0 (7-bit / Quantização em 128 Degraus - Ruído de Zíper)", this);
+        rbMidi2 = new QRadioButton("🟢 Modo MIDI 2.0 UMP (32-bit Contínuo)", this);
+        rbMidi1 = new QRadioButton("🔴 Modo MIDI 1.0 (7-bit / 14-bit com Degraus)", this);
         rbMidi2->setChecked(true);
 
         QButtonGroup* grpRadio = new QButtonGroup(this);
@@ -398,7 +398,7 @@ public:
 
         // Linha 2: Slider de Modulação CC1 (32-bit nativo)
         QHBoxLayout* hRowMod = new QHBoxLayout();
-        lblModCtrl = new QLabel("CC1 Modulação:   0.0% | UMP 32-bit: 0x00000000 | MIDI 1.0:   0/127 (32-bit)", this);
+        lblModCtrl = new QLabel("CC1 Modulação:   0.0% | UMP 32-bit: 0x00000000 | MIDI 1.0:   0/127 (7-bit)", this);
         lblModCtrl->setMinimumWidth(440);
         sliderMidiMod = new QSlider(Qt::Horizontal, this);
         sliderMidiMod->setRange(0, 10000);
@@ -415,7 +415,7 @@ public:
 
         // Linha 3: Slider de Filtro Cutoff CC74 (demonstração clássica de Zipper Noise)
         QHBoxLayout* hRowCutoff = new QHBoxLayout();
-        lblCutoffCtrl = new QLabel("CC74 Cutoff: 18000 Hz | UMP 32-bit: 0xFFFFFFFF | MIDI 1.0: 127/127 (32-bit)", this);
+        lblCutoffCtrl = new QLabel("CC74 Cutoff: 18000 Hz | UMP 32-bit: 0xFFFFFFFF | MIDI 1.0: 127/127 (7-bit)", this);
         lblCutoffCtrl->setMinimumWidth(440);
         sliderMidiCutoff = new QSlider(Qt::Horizontal, this);
         sliderMidiCutoff->setRange(0, 10000);
@@ -432,7 +432,7 @@ public:
 
         // Linha 4: Slider de Pitch Bend (32-bit nativo)
         QHBoxLayout* hRowPitch = new QHBoxLayout();
-        lblPitchCtrl = new QLabel("Pitch Bend:  +0.00 st | UMP 32-bit: 0x80000000 | MIDI 1.0:  64/127 (32-bit)", this);
+        lblPitchCtrl = new QLabel("Pitch Bend:  +0.00 st | UMP 32-bit: 0x80000000 | MIDI 1.0: 8192/16383 (14-bit)", this);
         lblPitchCtrl->setMinimumWidth(440);
         sliderMidiPitch = new QSlider(Qt::Horizontal, this);
         sliderMidiPitch->setRange(-10000, 10000);
@@ -541,7 +541,7 @@ private slots:
             lblModeBadge->setText("STATUS: MIDI 2.0 ATIVO (4.294.967.296 Passos / Sinal Contínuo sem Degraus)");
             lblModeBadge->setStyleSheet("background-color: #064e3b; color: #6ee7b7; border: 1px solid #10b981; border-radius: 4px; padding: 4px 8px; font-weight: bold; font-size: 11px;");
         } else {
-            lblModeBadge->setText("STATUS: MIDI 1.0 ATIVO (128 Passos / Zipper Noise Audível e Degraus Visíveis)");
+            lblModeBadge->setText("STATUS: MIDI 1.0 ATIVO (128 Passos CC / 16384 Passos PB - Zipper Noise Audível)");
             lblModeBadge->setStyleSheet("background-color: #7f1d1d; color: #fca5a5; border: 1px solid #ef4444; border-radius: 4px; padding: 4px 8px; font-weight: bold; font-size: 11px;");
         }
         onModSliderChanged(sliderMidiMod->value());
@@ -575,8 +575,9 @@ private slots:
         double norm = raw / 10000.0; // -1.0 a +1.0
         bool isMidi2 = g_synth.midi2_mode.load();
         if (!isMidi2) {
-            int step7 = (int)std::round(norm * 63.0);
-            norm = step7 / 63.0;
+            // MIDI 1.0 Pitch Bend: padrão de 14 bits (16384 degraus, centro 8192)
+            int step14 = (int)std::round(((norm + 1.0) * 0.5) * 16383.0);
+            norm = (step14 / 16383.0) * 2.0 - 1.0;
         }
         g_synth.pitch_offset_semitones.store(norm * 2.0);
         uint32_t p32 = (uint32_t)((norm + 1.0) * 0.5 * 4294967295.0);
@@ -588,7 +589,6 @@ private slots:
         double mod_d = g_synth.mod_depth.load();
         double cut_n = g_synth.filter_cutoff_norm.load();
         double pitch_st = g_synth.pitch_offset_semitones.load();
-        bool isMidi2 = g_synth.midi2_mode.load();
 
         uint32_t mod32 = (uint32_t)(mod_d * 4294967295.0);
         uint8_t mod7 = (uint8_t)std::round(mod_d * 127.0);
@@ -598,26 +598,23 @@ private slots:
         double fc = 80.0 * std::pow(18000.0 / 80.0, cut_n);
 
         uint32_t p32 = g_synth.last_pitch32.load();
-        int pitch7 = (int)std::round((pitch_st / 2.0) * 63.0) + 64;
-        if (pitch7 < 0) pitch7 = 0; else if (pitch7 > 127) pitch7 = 127;
+        int pitch14 = (int)std::round(((pitch_st / 2.0) + 1.0) * 0.5 * 16383.0);
+        if (pitch14 < 0) pitch14 = 0; else if (pitch14 > 16383) pitch14 = 16383;
 
-        lblModCtrl->setText(QString("CC1 Modulação:   %1% | UMP 32-bit: 0x%2 | MIDI 1.0: %3/127 %4")
+        lblModCtrl->setText(QString("CC1 Modulação:   %1% | UMP 32-bit: 0x%2 | MIDI 1.0:   %3/127 (7-bit)")
             .arg(mod_d * 100.0, 5, 'f', 1)
             .arg(mod32, 8, 16, QChar('0')).toUpper()
-            .arg(mod7, 3)
-            .arg(!isMidi2 ? "(7-bit)" : "(32-bit)"));
+            .arg(mod7, 3));
 
-        lblCutoffCtrl->setText(QString("CC74 Cutoff: %1 Hz | UMP 32-bit: 0x%2 | MIDI 1.0: %3/127 %4")
+        lblCutoffCtrl->setText(QString("CC74 Cutoff: %1 Hz | UMP 32-bit: 0x%2 | MIDI 1.0: %3/127 (7-bit)")
             .arg(fc, 5, 'f', 0)
             .arg(cut32, 8, 16, QChar('0')).toUpper()
-            .arg(cut7, 3)
-            .arg(!isMidi2 ? "(7-bit)" : "(32-bit)"));
+            .arg(cut7, 3));
 
-        lblPitchCtrl->setText(QString("Pitch Bend:  %1%2 st | UMP 32-bit: 0x%3 | MIDI 1.0: %4/127 %5")
+        lblPitchCtrl->setText(QString("Pitch Bend:  %1%2 st | UMP 32-bit: 0x%3 | MIDI 1.0: %4/16383 (14-bit)")
             .arg(pitch_st >= 0 ? "+" : "").arg(pitch_st, 4, 'f', 2)
             .arg(p32, 8, 16, QChar('0')).toUpper()
-            .arg(pitch7, 3)
-            .arg(!isMidi2 ? "(7-bit)" : "(32-bit)"));
+            .arg(pitch14, 5));
     }
 
     void onToggleTestNote() {
